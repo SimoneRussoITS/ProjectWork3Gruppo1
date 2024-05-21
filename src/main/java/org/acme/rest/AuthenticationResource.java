@@ -1,16 +1,25 @@
 package org.acme.rest;
 
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.Produces;
-import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.*;
+import jakarta.ws.rs.core.NewCookie;
+import jakarta.ws.rs.core.Response;
 
-@Path("/hello")
+@Path("/auth")
 public class AuthenticationResource {
 
-    @GET
-    @Produces(MediaType.TEXT_PLAIN)
-    public String hello() {
-        return "Hello from Quarkus REST";
+    AuthenticationService authenticationService = new AuthenticationService();
+
+    public AuthenticationResource(AuthenticationService authenticationService) {
+        this.authenticationService = authenticationService;
+    }
+
+    @POST
+    @Path("/login")
+    public Response login(@FormParam("name") String name, @FormParam("surname") String surname, @FormParam("email") String email, @FormParam("password") String password) {
+        int session = authenticationService.login(name, surname, email, password);
+        NewCookie sessionCookie = new NewCookie.Builder("SESSION_COOKIE").value(String.valueOf(session)).build();
+        return Response.ok()
+                .cookie(sessionCookie)
+                .build();
     }
 }
