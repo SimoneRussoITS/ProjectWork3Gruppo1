@@ -3,6 +3,7 @@ package org.acme.rest;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.NewCookie;
 import jakarta.ws.rs.core.Response;
+import org.acme.service.AuthenticationService;
 
 @Path("/auth")
 public class AuthenticationResource {
