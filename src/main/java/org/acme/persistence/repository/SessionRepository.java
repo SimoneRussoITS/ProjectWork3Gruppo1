@@ -1,6 +1,7 @@
 package org.acme.persistence.repository;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import org.acme.persistence.exception.SessionNotFoundException;
 import org.acme.persistence.model.Session;
 

@@ -1,6 +1,8 @@
 package org.acme.persistence.repository;
 
 import org.acme.persistence.model.Course;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import org.acme.persistence.model.User;
 import org.acme.rest.model.CreateUserRequest;
 import org.acme.rest.model.CreateUserResponse;
@@ -8,10 +10,12 @@ import org.acme.rest.model.CreateUserResponse;
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
 
+@ApplicationScoped
 public class UserRepository {
 
     private final DataSource dataSource;
@@ -21,23 +25,32 @@ public class UserRepository {
     }
 
     public User createUser(User user) {
-        try {
-            try (Connection connection = dataSource.getConnection()) {
-                try (PreparedStatement statement = connection.prepareStatement("INSERT INTO user (name, surname, email, password) VALUES (?, ?, ?, ?)", PreparedStatement.RETURN_GENERATED_KEYS)) {
-                    statement.setString(1, user.getName());
-                    statement.setString(2, user.getSurname());
-                    statement.setString(3, user.getEmail());
-                    statement.setString(4, user.getPasswordHash());
-                    statement.executeUpdate();
-                    var generatedKeys = statement.getGeneratedKeys();
+        try (Connection connection = dataSource.getConnection()) {
+            String sql = "INSERT INTO user (name, surname, email, password) VALUES (?, ?, ?, ?)";
+            try (PreparedStatement statement = connection.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
+                // Log the prepared statement and user details
+                System.out.println("Preparing statement: " + sql);
+                System.out.println("User details: " + user);
+
+                statement.setString(1, user.getName());
+                statement.setString(2, user.getSurname());
+                statement.setString(3, user.getEmail());
+                statement.setString(4, user.getPasswordHash());
+                statement.executeUpdate();
+
+                try (ResultSet generatedKeys = statement.getGeneratedKeys()) {
                     if (generatedKeys.next()) {
-                        var id = generatedKeys.getInt(1);
+                        int id = generatedKeys.getInt(1);
                         user.setId(id);
+                        // Log the generated ID
+                        System.out.println("Generated ID: " + id);
                     }
                 }
             }
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            // Log the exception details
+            e.printStackTrace();
+            throw new RuntimeException("Error creating user in the database", e);
         }
         return user;
     }
