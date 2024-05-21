@@ -3,6 +3,7 @@ package org.acme.rest;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.NewCookie;
 import jakarta.ws.rs.core.Response;
+import org.acme.rest.model.CreateUserResponse;
 import org.acme.service.AuthenticationService;
 import org.acme.service.exception.SessionCreatedException;
 import org.acme.service.exception.WrongCredentialException;
@@ -24,5 +25,24 @@ public class AuthenticationResource {
         return Response.ok()
                 .cookie(sessionCookie)
                 .build();
+    }
+
+    @DELETE
+    @Path("/logout")
+    public Response logout(@CookieParam("SESSION_COOKIE") int sessionId) {
+        authenticationService.logout(sessionId);
+        NewCookie sessionCookie = new NewCookie.Builder("SESSION_COOKIE").build();
+        return Response.ok()
+                .cookie(sessionCookie)
+                .build();
+    }
+
+    @GET
+    @Path("/profile")
+    public CreateUserResponse getProfile(@CookieParam("SESSION_COOKIE") @DefaultValue("-1") int sessionId) throws WrongCredentialException {
+        if (sessionId == -1) {
+            throw new WrongCredentialException();
+        }
+        return authenticationService.getProfile(sessionId);
     }
 }

@@ -65,4 +65,26 @@ public class UserRepository {
         }
         return Optional.empty();
     }
+
+    public User getUserById(int userId) {
+        try {
+            try (Connection connection = dataSource.getConnection()) {
+                try (PreparedStatement statement = connection.prepareStatement("SELECT id, name, surname, email FROM user WHERE id = ?")) {
+                    statement.setInt(1, userId);
+                    var resultSet = statement.executeQuery();
+                    while (resultSet.next()) {
+                        var user = new User();
+                        user.setId(resultSet.getInt("id"));
+                        user.setName(resultSet.getString("name"));
+                        user.setSurname(resultSet.getString("surname"));
+                        user.setEmail(resultSet.getString("email"));
+                        return user;
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return null;
+    }
 }

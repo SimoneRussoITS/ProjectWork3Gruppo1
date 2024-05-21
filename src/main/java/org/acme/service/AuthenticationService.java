@@ -2,9 +2,11 @@ package org.acme.service;
 
 import io.vertx.ext.auth.impl.hash.SHA512;
 import jakarta.enterprise.context.ApplicationScoped;
+import org.acme.persistence.model.Session;
 import org.acme.persistence.model.User;
 import org.acme.persistence.repository.SessionRepository;
 import org.acme.persistence.repository.UserRepository;
+import org.acme.rest.model.CreateUserResponse;
 import org.acme.service.exception.SessionCreatedException;
 import org.acme.service.exception.WrongCredentialException;
 
@@ -54,4 +56,13 @@ public class AuthenticationService {
     }
 
 
+    public void logout(int sessionId) {
+        sessionRepository.delete(sessionId);
+    }
+
+    public CreateUserResponse getProfile(int sessionId) {
+        Session s = sessionRepository.getSessionById(sessionId);
+        int userId = s.getUserId();
+        return userService.getUserById(userId);
+    }
 }

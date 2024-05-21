@@ -34,4 +34,19 @@ public class UserService {
         SHA512 a = new SHA512();
         return a.hash(null, password);
     }
+
+    private CreateUserResponse convertToResponse(User user) {
+        CreateUserResponse response = new CreateUserResponse();
+        response.setId(user.getId());
+        response.setName(user.getName());
+        response.setSurname(user.getSurname());
+        response.setEmail(user.getEmail());
+        return response;
+    }
+
+    public CreateUserResponse getUserById(int userId) {
+        User partecipante = userRepository.getUserById(userId);
+        CreateUserResponse pr = convertToResponse(partecipante);
+        return pr;
+    }
 }
