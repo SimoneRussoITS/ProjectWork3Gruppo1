@@ -1,10 +1,15 @@
 package org.acme.rest.model;
 
+import org.acme.persistence.model.Course;
+
+import java.util.List;
+
 public class CreateUserResponse {
     private int id;
     private String name;
     private String surname;
     private String email;
+    private List<Course> coursesSelected;
 
     public int getId() {
         return id;
@@ -36,5 +41,13 @@ public class CreateUserResponse {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public List<Course> getCoursesSelected() {
+        return coursesSelected;
+    }
+
+    public void setCoursesSelected(List<Course> coursesSelected) {
+        this.coursesSelected = coursesSelected;
     }
 }

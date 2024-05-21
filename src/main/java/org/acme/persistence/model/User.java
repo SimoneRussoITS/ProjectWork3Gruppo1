@@ -1,5 +1,6 @@
 package org.acme.persistence.model;
 
+import java.util.List;
 import java.util.Objects;
 
 public class User {
@@ -8,6 +9,7 @@ public class User {
     private String surname;
     private String email;
     private String passwordHash;
+    private List<Course> coursesSelected;
 
     public int getId() {
         return id;
@@ -49,15 +51,25 @@ public class User {
         this.passwordHash = passwordHash;
     }
 
+    public List<Course> getCoursesSelected() {
+        return coursesSelected;
+    }
+
+    public void setCoursesSelected(List<Course> coursesSelected) {
+        this.coursesSelected = coursesSelected;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof User user)) return false;
-        return id == user.id && Objects.equals(name, user.name) && Objects.equals(surname, user.surname) && Objects.equals(email, user.email) && Objects.equals(passwordHash, user.passwordHash);
+        if (o == null || getClass() != o.getClass()) return false;
+        User user = (User) o;
+        return id == user.id && Objects.equals(name, user.name) && Objects.equals(surname, user.surname) && Objects.equals(email, user.email) && Objects.equals(passwordHash, user.passwordHash) && Objects.equals(coursesSelected, user.coursesSelected);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, name, surname, email, passwordHash);
+        return Objects.hash(id, name, surname, email, passwordHash, coursesSelected);
     }
 }
+

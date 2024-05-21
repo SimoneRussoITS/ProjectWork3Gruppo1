@@ -1,5 +1,6 @@
 package org.acme.persistence.repository;
 
+import org.acme.persistence.model.Course;
 import org.acme.persistence.model.User;
 import org.acme.rest.model.CreateUserRequest;
 import org.acme.rest.model.CreateUserResponse;
@@ -8,6 +9,7 @@ import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.Optional;
 
 public class UserRepository {
@@ -69,7 +71,7 @@ public class UserRepository {
     public User getUserById(int userId) {
         try {
             try (Connection connection = dataSource.getConnection()) {
-                try (PreparedStatement statement = connection.prepareStatement("SELECT id, name, surname, email FROM user WHERE id = ?")) {
+                try (PreparedStatement statement = connection.prepareStatement("SELECT id, name, surname, email, courses_selected FROM user WHERE id = ?")) {
                     statement.setInt(1, userId);
                     var resultSet = statement.executeQuery();
                     while (resultSet.next()) {
@@ -78,6 +80,7 @@ public class UserRepository {
                         user.setName(resultSet.getString("name"));
                         user.setSurname(resultSet.getString("surname"));
                         user.setEmail(resultSet.getString("email"));
+                        user.setCoursesSelected(resultSet.getObject("courses_selected", List.class));
                         return user;
                     }
                 }

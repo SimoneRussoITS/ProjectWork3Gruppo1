@@ -27,12 +27,13 @@ public class UserService {
         response.setName(user.getName());
         response.setSurname(user.getSurname());
         response.setEmail(user.getEmail());
+        response.setCoursesSelected(user.getCoursesSelected());
         return response;
     }
 
     public CreateUserResponse getUserById(int userId) {
-        User partecipante = userRepository.getUserById(userId);
-        CreateUserResponse pr = convertToResponse(partecipante);
-        return pr;
+        User u = userRepository.getUserById(userId);
+        CreateUserResponse ur = convertToResponse(u);
+        return ur;
     }
 }

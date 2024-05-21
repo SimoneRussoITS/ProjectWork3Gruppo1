@@ -51,7 +51,6 @@ public class SessionRepository {
         try (Connection connection = dataSource.getConnection()) {
             try (PreparedStatement statement = connection.prepareStatement("SELECT id, user_id, created_at FROM session WHERE id = ?")) {
                 statement.setInt(1, sessionId);
-                ;
                 ResultSet rs = statement.executeQuery();
                 while (rs.next()) {
                     var sessione = new Session();
