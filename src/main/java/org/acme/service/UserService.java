@@ -16,11 +16,6 @@ public class UserService {
     }
 
 
-    private String hashCalculation(String password) {
-        SHA512 a = new SHA512();
-        return a.hash(null, password);
-    }
-
     private CreateUserResponse convertToResponse(User user) {
         CreateUserResponse response = new CreateUserResponse();
         response.setId(user.getId());
