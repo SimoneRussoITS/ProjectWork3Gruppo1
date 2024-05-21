@@ -1,9 +1,11 @@
 package org.acme.rest;
 
+import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
+import org.acme.persistence.model.User;
 import org.acme.persistence.repository.UserRepository;
 import org.acme.rest.model.CreateUserRequest;
 import org.acme.rest.model.CreateUserResponse;
@@ -20,10 +22,10 @@ public class UserResource {
         this.userService = userService;
     }
 
-    @POST
+    @GET
+    @Path("/{id}")
     @Produces(MediaType.APPLICATION_JSON)
-    public CreateUserResponse createUser(CreateUserRequest user) {
-        return userService.createUser(user);
+    public User getUser(int id) {
+        return userRepository.getUserById(id);
     }
-
 }

@@ -1,8 +1,10 @@
 package org.acme.rest;
 
 import jakarta.ws.rs.*;
+import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.NewCookie;
 import jakarta.ws.rs.core.Response;
+import org.acme.rest.model.CreateUserRequest;
 import org.acme.rest.model.CreateUserResponse;
 import org.acme.service.AuthenticationService;
 import org.acme.service.exception.SessionCreatedException;
@@ -15,6 +17,13 @@ public class AuthenticationResource {
 
     public AuthenticationResource(AuthenticationService authenticationService) {
         this.authenticationService = authenticationService;
+    }
+
+    @POST
+    @Path("/register")
+    @Produces(MediaType.APPLICATION_JSON)
+    public CreateUserResponse register(CreateUserRequest user) {
+        return authenticationService.register(user);
     }
 
     @POST

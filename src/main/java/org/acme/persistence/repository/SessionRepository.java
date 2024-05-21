@@ -1,5 +1,6 @@
 package org.acme.persistence.repository;
 
+import jakarta.enterprise.context.ApplicationScoped;
 import org.acme.persistence.exception.SessionNotFoundException;
 import org.acme.persistence.model.Session;
 
@@ -9,6 +10,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+@ApplicationScoped
 public class SessionRepository {
     private final DataSource dataSource;
 
@@ -18,7 +20,7 @@ public class SessionRepository {
 
     public int insertSession(int idUser) throws SQLException {
         try (Connection c = dataSource.getConnection()) {
-            try (PreparedStatement ps = c.prepareStatement("INSERT INTO session (session_id) VALUES (?)", PreparedStatement.RETURN_GENERATED_KEYS)) {
+            try (PreparedStatement ps = c.prepareStatement("INSERT INTO session (user_id) VALUES (?)", PreparedStatement.RETURN_GENERATED_KEYS)) {
 
                 ps.setInt(1,idUser);
                 ps.executeUpdate();

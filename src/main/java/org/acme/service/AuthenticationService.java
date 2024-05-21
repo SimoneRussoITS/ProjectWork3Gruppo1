@@ -6,6 +6,7 @@ import org.acme.persistence.model.Session;
 import org.acme.persistence.model.User;
 import org.acme.persistence.repository.SessionRepository;
 import org.acme.persistence.repository.UserRepository;
+import org.acme.rest.model.CreateUserRequest;
 import org.acme.rest.model.CreateUserResponse;
 import org.acme.service.exception.SessionCreatedException;
 import org.acme.service.exception.WrongCredentialException;
@@ -49,6 +50,24 @@ public class AuthenticationService {
             throw new WrongCredentialException();
         }
     }
+
+    public CreateUserResponse register(CreateUserRequest user) {
+        String password = user.getPassword();
+        String hash = hashCalculation(password);
+        User u = new User();
+        u.setName(user.getName());
+        u.setSurname(user.getSurname());
+        u.setEmail(user.getEmail());
+        u.setPasswordHash(hash);
+        User createdUser = userRepository.createUser(u);
+        CreateUserResponse cur = new CreateUserResponse();
+        cur.setId(createdUser.getId());
+        cur.setName(createdUser.getName());
+        cur.setSurname(createdUser.getSurname());
+        cur.setEmail(createdUser.getEmail());
+        return cur;
+    }
+
 
     private String hashCalculation(String password) {
         SHA512 a = new SHA512();
