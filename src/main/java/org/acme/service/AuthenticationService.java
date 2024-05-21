@@ -10,6 +10,7 @@ import org.acme.service.exception.WrongCredentialException;
 
 import java.sql.SQLException;
 import java.util.Optional;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @ApplicationScoped
@@ -30,19 +31,19 @@ public class AuthenticationService {
 
         Optional<User> maybeUser = userRepository.findByCredentials(name, surname, email, hash);
         if (maybeUser.isPresent()) {
+            LOGGER.log(Level.INFO, "User found: " + email);
             User user = maybeUser.get();
-            if (userService.checkPassword(user, password)) {
-                try {
-                    int session = sessionRepository.insertSession(user.getId());
-                    LOGGER.info("Session created with ID: " + session);
-                    return session;
-                } catch (SQLException e) {
-                    LOGGER.severe("Failed to create session.");
-                    throw new SessionCreatedException(e);
-                }
+            try {
+                int session = sessionRepository.insertSession(user.getId());
+                LOGGER.info("Session created with ID: " + session);
+                return session;
+            } catch (SQLException e) {
+                LOGGER.severe("Failed to create session.");
+                throw new SessionCreatedException(e);
             }
+
         } else {
-            LOGGER.info("User not found: " + email);
+            LOGGER.log(Level.INFO, "User not found: " + email);
             throw new WrongCredentialException();
         }
     }
