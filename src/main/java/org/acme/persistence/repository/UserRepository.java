@@ -2,8 +2,6 @@ package org.acme.persistence.repository;
 
 import org.acme.persistence.model.*;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
-import org.acme.rest.model.CreateUserRequest;
 import org.acme.rest.model.CreateUserResponse;
 
 import javax.sql.DataSource;
@@ -22,7 +20,7 @@ public class UserRepository {
 
     public User createUser(User user) {
         try (Connection connection = dataSource.getConnection()) {
-            String sql = "INSERT INTO user (name, surname, email, password, role, course_selected) VALUES (?, ?, ?, ?, ?, ?)";
+            String sql = "INSERT INTO user (name, surname, email, password, role, state, course_selected) VALUES (?, ?, ?, ?, ?, ?, ?)";
             try (PreparedStatement statement = connection.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
                 // Log the prepared statement and user details
                 System.out.println("Preparing statement: " + sql);
@@ -32,12 +30,13 @@ public class UserRepository {
                 statement.setString(2, user.getSurname());
                 statement.setString(3, user.getEmail());
                 statement.setString(4, user.getPasswordHash());
+                statement.setString(5, String.valueOf(user.getRole()));
+                statement.setString(6, String.valueOf(user.getState()));
 
-                // Assuming courseId is the ID of the selected course
-                if (user.getCourseSelected() != null) {
-                    statement.setInt(5, user.getCourseSelected().getIdCourse());
+                if (user.getCourseSelected() == null) {
+                    statement.setNull(7, java.sql.Types.NULL);
                 } else {
-                    statement.setNull(5, Types.INTEGER);
+                    statement.setString(7, String.valueOf(user.getCourseSelected()));
                 }
 
                 statement.executeUpdate();
@@ -62,7 +61,7 @@ public class UserRepository {
     public Optional<User> findByCredentials(String email, String hash) {
         try {
             try (Connection connection = dataSource.getConnection()) {
-                try (PreparedStatement statement = connection.prepareStatement("SELECT id, name, surname, email, password, role, course_selected FROM user WHERE email = ? AND password = ?")) {
+                try (PreparedStatement statement = connection.prepareStatement("SELECT id, name, surname, email, password, role, state, course_selected FROM user WHERE email = ? AND password = ?")) {
                     statement.setString(1, email); // Imposta il primo parametro con l'email
                     statement.setString(2, hash); // Imposta il secondo parametro con l'hash della password
 
@@ -75,6 +74,7 @@ public class UserRepository {
                             user.setEmail(resultSet.getString("email"));
                             user.setPasswordHash(resultSet.getString("password"));
                             user.setRole(Role.valueOf(resultSet.getString("role")));
+                            user.setState(State.valueOf(resultSet.getString("state")));
                             user.setCourseSelected((Course) resultSet.getObject("course_selected"));
                             return Optional.of(user);
                         }
@@ -89,7 +89,7 @@ public class UserRepository {
 
     public User getUserById(int userId) throws SQLException {
         User user = null;
-        String sql = "SELECT u.id, u.name, u.surname, u.email, u.role, u.course_selected, c.id as course_id, c.name as course_name, c.category, c.state " +
+        String sql = "SELECT u.id, u.name, u.surname, u.email, u.role, u.state, u.course_selected, c.id as course_id, c.name as course_name, c.category " +
                 "FROM user u " +
                 "LEFT JOIN course c ON u.course_selected = c.id " +
                 "WHERE u.id = ?";
@@ -106,6 +106,7 @@ public class UserRepository {
                     user.setSurname(rs.getString("surname"));
                     user.setEmail(rs.getString("email"));
                     user.setRole(Role.valueOf(rs.getString("role")));
+                    user.setState(State.valueOf(rs.getString("state")));
 
                     int courseId = rs.getInt("course_id");
                     if (courseId != 0) {
@@ -113,7 +114,6 @@ public class UserRepository {
                         course.setIdCourse(courseId);
                         course.setName(rs.getString("course_name"));
                         course.setCategory(Category.valueOf(rs.getString("category")));
-                        course.setState(State.valueOf(rs.getString("state")));
                         user.setCourseSelected(course);
                     } else {
                         user.setCourseSelected(null); // Gestione del caso in cui non c'è un corso
@@ -136,18 +136,19 @@ public class UserRepository {
 
 
 
-    public List<User> getAllUsers() {
+    public List<CreateUserResponse> getAllUsers() {
         try {
             try (Connection connection = dataSource.getConnection()) {
-                try (PreparedStatement statement = connection.prepareStatement("SELECT id, name, surname, email, role, course_selected FROM user")) {
+                try (PreparedStatement statement = connection.prepareStatement("SELECT id, name, surname, email, role, state, course_selected FROM user")) {
                     var resultSet = statement.executeQuery();
                     while (resultSet.next()) {
-                        var user = new User();
+                        var user = new CreateUserResponse();
                         user.setId(resultSet.getInt("id"));
                         user.setName(resultSet.getString("name"));
                         user.setSurname(resultSet.getString("surname"));
                         user.setEmail(resultSet.getString("email"));
                         user.setRole(resultSet.getObject("role", Role.class));
+                        user.setState(resultSet.getObject("state", State.class));
                         user.setCourseSelected(resultSet.getObject("courses_selected", Course.class));
                         return List.of(user);
                     }

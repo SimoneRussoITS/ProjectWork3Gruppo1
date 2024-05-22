@@ -10,6 +10,7 @@ public class User {
     private String email;
     private String passwordHash;
     private Role role;
+    private State state;
     private Course courseSelected;
 
     public int getId() {
@@ -52,16 +53,24 @@ public class User {
         this.passwordHash = passwordHash;
     }
 
-    public Course getCourseSelected() {
-        return courseSelected;
-    }
-
     public Role getRole() {
         return role;
     }
 
     public void setRole(Role role) {
         this.role = role;
+    }
+
+    public State getState() {
+        return state;
+    }
+
+    public void setState(State state) {
+        this.state = state;
+    }
+
+    public Course getCourseSelected() {
+        return courseSelected;
     }
 
     public void setCourseSelected(Course courseSelected) {
@@ -72,12 +81,12 @@ public class User {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof User user)) return false;
-        return id == user.id && Objects.equals(name, user.name) && Objects.equals(surname, user.surname) && Objects.equals(email, user.email) && Objects.equals(passwordHash, user.passwordHash) && role == user.role && Objects.equals(courseSelected, user.courseSelected);
+        return id == user.id && Objects.equals(name, user.name) && Objects.equals(surname, user.surname) && Objects.equals(email, user.email) && Objects.equals(passwordHash, user.passwordHash) && role == user.role && state == user.state && Objects.equals(courseSelected, user.courseSelected);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, name, surname, email, passwordHash, role, courseSelected);
+        return Objects.hash(id, name, surname, email, passwordHash, role, state, courseSelected);
     }
 
     @Override
@@ -89,6 +98,7 @@ public class User {
                 ", email='" + email + '\'' +
                 ", passwordHash='" + passwordHash + '\'' +
                 ", role=" + role +
+                ", state=" + state +
                 ", courseSelected=" + courseSelected +
                 '}';
     }

@@ -1,10 +1,8 @@
 package org.acme.service;
 
-import io.vertx.ext.auth.impl.hash.SHA512;
 import jakarta.enterprise.context.ApplicationScoped;
 import org.acme.persistence.model.User;
 import org.acme.persistence.repository.UserRepository;
-import org.acme.rest.model.CreateUserRequest;
 import org.acme.rest.model.CreateUserResponse;
 
 import java.sql.SQLException;

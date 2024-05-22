@@ -2,6 +2,7 @@ package org.acme.rest.model;
 
 import org.acme.persistence.model.Course;
 import org.acme.persistence.model.Role;
+import org.acme.persistence.model.State;
 
 public class CreateUserResponse {
     private int id;
@@ -9,6 +10,7 @@ public class CreateUserResponse {
     private String surname;
     private String email;
     private Role role;
+    private State state;
     private Course courseSelected;
 
     public int getId() {
@@ -49,6 +51,14 @@ public class CreateUserResponse {
 
     public void setRole(Role role) {
         this.role = role;
+    }
+
+    public State getState() {
+        return state;
+    }
+
+    public void setState(State state) {
+        this.state = state;
     }
 
     public Course getCourseSelected() {

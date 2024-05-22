@@ -40,18 +40,6 @@ public class AuthenticationService {
         if (maybeUser.isPresent()) {
             LOGGER.log(Level.INFO, "User found: " + email);
             User user = maybeUser.get();
-            if (email.equals("itswebdev@pw.it") && password.equals("itsincom2024")) {
-                LOGGER.log(Level.INFO, "User found: " + email);
-                User admin = maybeUser.get();
-                try {
-                    int session = sessionRepository.insertSession(admin.getId());
-                    LOGGER.info("Session created with ID: " + session);
-                    return session;
-                } catch (SQLException e) {
-                    LOGGER.severe("Failed to create session.");
-                    throw new SessionCreatedException(e);
-                }
-            }
             try {
                 int session = sessionRepository.insertSession(user.getId());
                 LOGGER.info("Session created with ID: " + session);
@@ -80,6 +68,8 @@ public class AuthenticationService {
             u.setSurname(user.getSurname());
             u.setEmail(user.getEmail());
             u.setPasswordHash(hash);
+            u.setRole(user.getRole());
+            u.setState(user.getState());
 
             // Salva l'utente nel repository
             User createdUser = userRepository.createUser(u);
@@ -90,6 +80,8 @@ public class AuthenticationService {
             cur.setName(createdUser.getName());
             cur.setSurname(createdUser.getSurname());
             cur.setEmail(createdUser.getEmail());
+            cur.setRole(createdUser.getRole());
+            cur.setState(createdUser.getState());
 
             return cur;
         } catch (Exception e) {
@@ -117,6 +109,7 @@ public class AuthenticationService {
         response.setSurname(user.getSurname());
         response.setEmail(user.getEmail());
         response.setRole(user.getRole());
+        response.setState(user.getState());
         response.setCourseSelected(user.getCourseSelected());
         // Aggiungi altre informazioni necessarie al profilo dell'utente
 
