@@ -1,11 +1,8 @@
 package org.acme.persistence.repository;
 
-import org.acme.persistence.model.Category;
-import org.acme.persistence.model.Course;
+import org.acme.persistence.model.*;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import org.acme.persistence.model.State;
-import org.acme.persistence.model.User;
 import org.acme.rest.model.CreateUserRequest;
 import org.acme.rest.model.CreateUserResponse;
 
@@ -25,7 +22,7 @@ public class UserRepository {
 
     public User createUser(User user) {
         try (Connection connection = dataSource.getConnection()) {
-            String sql = "INSERT INTO user (name, surname, email, password, course_selected) VALUES (?, ?, ?, ?, ?)";
+            String sql = "INSERT INTO user (name, surname, email, password, role, course_selected) VALUES (?, ?, ?, ?, ?, ?)";
             try (PreparedStatement statement = connection.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
                 // Log the prepared statement and user details
                 System.out.println("Preparing statement: " + sql);
@@ -65,7 +62,7 @@ public class UserRepository {
     public Optional<User> findByCredentials(String email, String hash) {
         try {
             try (Connection connection = dataSource.getConnection()) {
-                try (PreparedStatement statement = connection.prepareStatement("SELECT id, name, surname, email, password, course_selected FROM user WHERE email = ? AND password = ?")) {
+                try (PreparedStatement statement = connection.prepareStatement("SELECT id, name, surname, email, password, role, course_selected FROM user WHERE email = ? AND password = ?")) {
                     statement.setString(1, email); // Imposta il primo parametro con l'email
                     statement.setString(2, hash); // Imposta il secondo parametro con l'hash della password
 
@@ -77,6 +74,7 @@ public class UserRepository {
                             user.setSurname(resultSet.getString("surname"));
                             user.setEmail(resultSet.getString("email"));
                             user.setPasswordHash(resultSet.getString("password"));
+                            user.setRole(Role.valueOf(resultSet.getString("role")));
                             user.setCourseSelected((Course) resultSet.getObject("course_selected"));
                             return Optional.of(user);
                         }
@@ -91,7 +89,7 @@ public class UserRepository {
 
     public User getUserById(int userId) throws SQLException {
         User user = null;
-        String sql = "SELECT u.id, u.name, u.surname, u.email, u.course_selected, c.id as course_id, c.name as course_name, c.category, c.state " +
+        String sql = "SELECT u.id, u.name, u.surname, u.email, u.role, u.course_selected, c.id as course_id, c.name as course_name, c.category, c.state " +
                 "FROM user u " +
                 "LEFT JOIN course c ON u.course_selected = c.id " +
                 "WHERE u.id = ?";
@@ -107,6 +105,7 @@ public class UserRepository {
                     user.setName(rs.getString("name"));
                     user.setSurname(rs.getString("surname"));
                     user.setEmail(rs.getString("email"));
+                    user.setRole(Role.valueOf(rs.getString("role")));
 
                     int courseId = rs.getInt("course_id");
                     if (courseId != 0) {
@@ -140,7 +139,7 @@ public class UserRepository {
     public List<User> getAllUsers() {
         try {
             try (Connection connection = dataSource.getConnection()) {
-                try (PreparedStatement statement = connection.prepareStatement("SELECT id, name, surname, email, course_selected FROM user")) {
+                try (PreparedStatement statement = connection.prepareStatement("SELECT id, name, surname, email, role, course_selected FROM user")) {
                     var resultSet = statement.executeQuery();
                     while (resultSet.next()) {
                         var user = new User();
@@ -148,6 +147,7 @@ public class UserRepository {
                         user.setName(resultSet.getString("name"));
                         user.setSurname(resultSet.getString("surname"));
                         user.setEmail(resultSet.getString("email"));
+                        user.setRole(resultSet.getObject("role", Role.class));
                         user.setCourseSelected(resultSet.getObject("courses_selected", Course.class));
                         return List.of(user);
                     }

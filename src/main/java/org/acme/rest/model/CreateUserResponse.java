@@ -1,14 +1,14 @@
 package org.acme.rest.model;
 
 import org.acme.persistence.model.Course;
-
-import java.util.List;
+import org.acme.persistence.model.Role;
 
 public class CreateUserResponse {
     private int id;
     private String name;
     private String surname;
     private String email;
+    private Role role;
     private Course courseSelected;
 
     public int getId() {
@@ -41,6 +41,14 @@ public class CreateUserResponse {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public Role getRole() {
+        return role;
+    }
+
+    public void setRole(Role role) {
+        this.role = role;
     }
 
     public Course getCourseSelected() {

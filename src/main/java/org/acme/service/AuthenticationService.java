@@ -1,6 +1,5 @@
 package org.acme.service;
 
-import io.vertx.ext.auth.impl.hash.SHA512;
 import jakarta.enterprise.context.ApplicationScoped;
 import org.acme.persistence.model.Session;
 import org.acme.persistence.model.User;
@@ -117,6 +116,7 @@ public class AuthenticationService {
         response.setName(user.getName());
         response.setSurname(user.getSurname());
         response.setEmail(user.getEmail());
+        response.setRole(user.getRole());
         response.setCourseSelected(user.getCourseSelected());
         // Aggiungi altre informazioni necessarie al profilo dell'utente
 
