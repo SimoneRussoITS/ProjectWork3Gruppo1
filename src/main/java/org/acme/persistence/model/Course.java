@@ -1,5 +1,6 @@
 package org.acme.persistence.model;
 
+
 public class Course {
     private int idCourse;
     private String name;
@@ -37,13 +38,4 @@ public class Course {
     public void setState(State state) {
         this.state = state;
     }
-
-    public enum Category {
-        PROGRAMMING, NEW_TECHNOLOGIES, COMMUNICATION
-    }
-
-    public enum State {
-        ACTIVE, INACTIVE, PENDING, DROPPED
-    }
-
 }

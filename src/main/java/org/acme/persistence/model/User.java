@@ -9,6 +9,7 @@ public class User {
     private String surname;
     private String email;
     private String passwordHash;
+    private Role role;
     private Course courseSelected;
 
     public int getId() {
@@ -55,6 +56,14 @@ public class User {
         return courseSelected;
     }
 
+    public Role getRole() {
+        return role;
+    }
+
+    public void setRole(Role role) {
+        this.role = role;
+    }
+
     public void setCourseSelected(Course courseSelected) {
         this.courseSelected = courseSelected;
     }
@@ -62,14 +71,13 @@ public class User {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        User user = (User) o;
-        return id == user.id && Objects.equals(name, user.name) && Objects.equals(surname, user.surname) && Objects.equals(email, user.email) && Objects.equals(passwordHash, user.passwordHash) && Objects.equals(courseSelected, user.courseSelected);
+        if (!(o instanceof User user)) return false;
+        return id == user.id && Objects.equals(name, user.name) && Objects.equals(surname, user.surname) && Objects.equals(email, user.email) && Objects.equals(passwordHash, user.passwordHash) && role == user.role && Objects.equals(courseSelected, user.courseSelected);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, name, surname, email, passwordHash, courseSelected);
+        return Objects.hash(id, name, surname, email, passwordHash, role, courseSelected);
     }
 
     @Override
@@ -78,7 +86,11 @@ public class User {
                 "id=" + id +
                 ", name='" + name + '\'' +
                 ", surname='" + surname + '\'' +
-                ", email='" + email + '}';
+                ", email='" + email + '\'' +
+                ", passwordHash='" + passwordHash + '\'' +
+                ", role=" + role +
+                ", courseSelected=" + courseSelected +
+                '}';
     }
 }
 

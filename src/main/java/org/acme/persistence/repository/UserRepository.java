@@ -1,8 +1,10 @@
 package org.acme.persistence.repository;
 
+import org.acme.persistence.model.Category;
 import org.acme.persistence.model.Course;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import org.acme.persistence.model.State;
 import org.acme.persistence.model.User;
 import org.acme.rest.model.CreateUserRequest;
 import org.acme.rest.model.CreateUserResponse;
@@ -111,8 +113,8 @@ public class UserRepository {
                         Course course = new Course();
                         course.setIdCourse(courseId);
                         course.setName(rs.getString("course_name"));
-                        course.setCategory(Course.Category.valueOf(rs.getString("category")));
-                        course.setState(Course.State.valueOf(rs.getString("state")));
+                        course.setCategory(Category.valueOf(rs.getString("category")));
+                        course.setState(State.valueOf(rs.getString("state")));
                         user.setCourseSelected(course);
                     } else {
                         user.setCourseSelected(null); // Gestione del caso in cui non c'è un corso
