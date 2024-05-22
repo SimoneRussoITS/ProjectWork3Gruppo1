@@ -1,9 +1,6 @@
 package org.acme.rest;
 
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.POST;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import org.acme.persistence.model.User;
 import org.acme.persistence.repository.UserRepository;
@@ -18,11 +15,9 @@ import java.util.List;
 @Path("/users")
 public class UserResource {
     private final UserRepository userRepository;
-    private final UserService userService;
 
-    public UserResource(UserRepository userRepository, UserService userService) {
+    public UserResource(UserRepository userRepository) {
         this.userRepository = userRepository;
-        this.userService = userService;
     }
 
     @GET
@@ -34,7 +29,7 @@ public class UserResource {
     @GET
     @Path("/{id}")
     @Produces(MediaType.APPLICATION_JSON)
-    public User getUser(int id) throws SQLException {
+    public User getUser(@PathParam("id") int id) throws SQLException {
         return userRepository.getUserById(id);
     }
 }
