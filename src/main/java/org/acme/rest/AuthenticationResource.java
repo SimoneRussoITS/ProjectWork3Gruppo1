@@ -10,6 +10,8 @@ import org.acme.service.AuthenticationService;
 import org.acme.service.exception.SessionCreatedException;
 import org.acme.service.exception.WrongCredentialException;
 
+import java.sql.SQLException;
+
 @Path("/auth")
 public class AuthenticationResource {
 
@@ -21,15 +23,14 @@ public class AuthenticationResource {
 
     @POST
     @Path("/register")
-    @Produces(MediaType.APPLICATION_JSON)
     public CreateUserResponse register(CreateUserRequest user) {
         return authenticationService.register(user);
     }
 
     @POST
     @Path("/login")
-    public Response login(@FormParam("name") String name, @FormParam("surname") String surname, @FormParam("email") String email, @FormParam("password") String password) throws WrongCredentialException, SessionCreatedException {
-        int session = authenticationService.login(name, surname, email, password);
+    public Response login(@FormParam("email") String email, @FormParam("password") String password) throws WrongCredentialException, SessionCreatedException {
+        int session = authenticationService.login(email, password);
         NewCookie sessionCookie = new NewCookie.Builder("SESSION_COOKIE").value(String.valueOf(session)).build();
         return Response.ok()
                 .cookie(sessionCookie)
@@ -48,7 +49,7 @@ public class AuthenticationResource {
 
     @GET
     @Path("/profile")
-    public CreateUserResponse getProfile(@CookieParam("SESSION_COOKIE") @DefaultValue("-1") int sessionId) throws WrongCredentialException {
+    public CreateUserResponse getProfile(@CookieParam("SESSION_COOKIE") @DefaultValue("-1") int sessionId) throws WrongCredentialException, SQLException {
         if (sessionId == -1) {
             throw new WrongCredentialException();
         }

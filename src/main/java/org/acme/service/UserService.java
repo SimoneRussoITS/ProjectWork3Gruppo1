@@ -7,6 +7,8 @@ import org.acme.persistence.repository.UserRepository;
 import org.acme.rest.model.CreateUserRequest;
 import org.acme.rest.model.CreateUserResponse;
 
+import java.sql.SQLException;
+
 @ApplicationScoped
 public class UserService {
     private final UserRepository userRepository;
@@ -22,11 +24,11 @@ public class UserService {
         response.setName(user.getName());
         response.setSurname(user.getSurname());
         response.setEmail(user.getEmail());
-        response.setCoursesSelected(user.getCoursesSelected());
+        response.setCourseSelected(user.getCourseSelected());
         return response;
     }
 
-    public CreateUserResponse getUserById(int userId) {
+    public CreateUserResponse getUserById(int userId) throws SQLException {
         User u = userRepository.getUserById(userId);
         CreateUserResponse ur = convertToResponse(u);
         return ur;

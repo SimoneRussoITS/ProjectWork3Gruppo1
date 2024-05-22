@@ -8,10 +8,7 @@ import org.acme.rest.model.CreateUserRequest;
 import org.acme.rest.model.CreateUserResponse;
 
 import javax.sql.DataSource;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.List;
 import java.util.Optional;
 
@@ -26,7 +23,7 @@ public class UserRepository {
 
     public User createUser(User user) {
         try (Connection connection = dataSource.getConnection()) {
-            String sql = "INSERT INTO user (name, surname, email, password) VALUES (?, ?, ?, ?)";
+            String sql = "INSERT INTO user (name, surname, email, password, course_selected) VALUES (?, ?, ?, ?, ?)";
             try (PreparedStatement statement = connection.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
                 // Log the prepared statement and user details
                 System.out.println("Preparing statement: " + sql);
@@ -36,6 +33,14 @@ public class UserRepository {
                 statement.setString(2, user.getSurname());
                 statement.setString(3, user.getEmail());
                 statement.setString(4, user.getPasswordHash());
+
+                // Assuming courseId is the ID of the selected course
+                if (user.getCourseSelected() != null) {
+                    statement.setInt(5, user.getCourseSelected().getIdCourse());
+                } else {
+                    statement.setNull(5, Types.INTEGER);
+                }
+
                 statement.executeUpdate();
 
                 try (ResultSet generatedKeys = statement.getGeneratedKeys()) {
@@ -48,44 +53,92 @@ public class UserRepository {
                 }
             }
         } catch (SQLException e) {
-            // Log the exception details
             e.printStackTrace();
             throw new RuntimeException("Error creating user in the database", e);
         }
         return user;
     }
 
-    public Optional<User> findByCredentials(String name, String surname, String email, String hash) {
+
+    public Optional<User> findByCredentials(String email, String hash) {
         try {
             try (Connection connection = dataSource.getConnection()) {
-                try (PreparedStatement statement = connection.prepareStatement("SELECT id, name, surname, email, password FROM user WHERE name = ? AND surname = ? AND email = ? AND password = ?")) {
-                    statement.setString(1, name);
-                    statement.setString(2, surname);
-                    statement.setString(3, email);
-                    statement.setString(4, hash);
-                    var resultSet = statement.executeQuery();
-                    while (resultSet.next()) {
-                        var user = new User();
-                        user.setId(resultSet.getInt("id"));
-                        user.setName(resultSet.getString("name"));
-                        user.setSurname(resultSet.getString("surname"));
-                        user.setEmail(resultSet.getString("email"));
-                        user.setPasswordHash(resultSet.getString("password"));
-                        return Optional.of(user);
+                try (PreparedStatement statement = connection.prepareStatement("SELECT id, name, surname, email, password, course_selected FROM user WHERE email = ? AND password = ?")) {
+                    statement.setString(1, email); // Imposta il primo parametro con l'email
+                    statement.setString(2, hash); // Imposta il secondo parametro con l'hash della password
+
+                    try (ResultSet resultSet = statement.executeQuery()) {
+                        if (resultSet.next()) {
+                            User user = new User();
+                            user.setId(resultSet.getInt("id"));
+                            user.setName(resultSet.getString("name"));
+                            user.setSurname(resultSet.getString("surname"));
+                            user.setEmail(resultSet.getString("email"));
+                            user.setPasswordHash(resultSet.getString("password"));
+                            user.setCourseSelected((Course) resultSet.getObject("course_selected"));
+                            return Optional.of(user);
+                        }
                     }
                 }
             }
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("Errore durante il recupero dell'utente per le credenziali", e);
         }
         return Optional.empty();
     }
 
-    public User getUserById(int userId) {
+    public User getUserById(int userId) throws SQLException {
+        User user = null;
+        String sql = "SELECT u.id, u.name, u.surname, u.email, u.course_selected, c.id as course_id, c.name as course_name, c.category, c.state " +
+                "FROM user u " +
+                "LEFT JOIN course c ON u.course_selected = c.id " +
+                "WHERE u.id = ?";
+
+        try (Connection c = dataSource.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+
+            ps.setInt(1, userId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    user = new User();
+                    user.setId(rs.getInt("id"));
+                    user.setName(rs.getString("name"));
+                    user.setSurname(rs.getString("surname"));
+                    user.setEmail(rs.getString("email"));
+
+                    int courseId = rs.getInt("course_id");
+                    if (courseId != 0) {
+                        Course course = new Course();
+                        course.setIdCourse(courseId);
+                        course.setName(rs.getString("course_name"));
+                        course.setCategory(Course.Category.valueOf(rs.getString("category")));
+                        course.setState(Course.State.valueOf(rs.getString("state")));
+                        user.setCourseSelected(course);
+                    } else {
+                        user.setCourseSelected(null); // Gestione del caso in cui non c'è un corso
+                    }
+
+                    System.out.println("User found: " + user.getName());
+                    if (user.getCourseSelected() != null) {
+                        System.out.println("Course found: " + user.getCourseSelected().getName());
+                    } else {
+                        System.out.println("No course selected for user.");
+                    }
+                } else {
+                    System.out.println("User not found with id: " + userId);
+                }
+            }
+        }
+        return user;
+    }
+
+
+
+
+    public List<User> getAllUsers() {
         try {
             try (Connection connection = dataSource.getConnection()) {
-                try (PreparedStatement statement = connection.prepareStatement("SELECT id, name, surname, email, courses_selected FROM user WHERE id = ?")) {
-                    statement.setInt(1, userId);
+                try (PreparedStatement statement = connection.prepareStatement("SELECT id, name, surname, email, course_selected FROM user")) {
                     var resultSet = statement.executeQuery();
                     while (resultSet.next()) {
                         var user = new User();
@@ -93,14 +146,14 @@ public class UserRepository {
                         user.setName(resultSet.getString("name"));
                         user.setSurname(resultSet.getString("surname"));
                         user.setEmail(resultSet.getString("email"));
-                        user.setCoursesSelected(resultSet.getObject("courses_selected", List.class));
-                        return user;
+                        user.setCourseSelected(resultSet.getObject("courses_selected", Course.class));
+                        return List.of(user);
                     }
                 }
             }
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
-        return null;
+        return List.of();
     }
 }

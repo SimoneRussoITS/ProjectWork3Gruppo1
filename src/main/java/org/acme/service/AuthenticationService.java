@@ -33,11 +33,11 @@ public class AuthenticationService {
         this.sessionRepository = sessionRepository;
     }
 
-    public int login(String name, String surname, String email, String password) throws WrongCredentialException, SessionCreatedException {
+    public int login(String email, String password) throws WrongCredentialException, SessionCreatedException {
 
         String hash = hashCalculator.calculateHash(password);
 
-        Optional<User> maybeUser = userRepository.findByCredentials(name, surname, email, hash);
+        Optional<User> maybeUser = userRepository.findByCredentials(email, hash);
         if (maybeUser.isPresent()) {
             LOGGER.log(Level.INFO, "User found: " + email);
             User user = maybeUser.get();
@@ -70,16 +70,10 @@ public class AuthenticationService {
 
     public CreateUserResponse register(CreateUserRequest user) {
         try {
-            // Log the incoming request
-            System.out.println("Registering user: " + user);
 
             // Calcola l'hash della password
             String password = user.getPassword();
             String hash = hashCalculator.calculateHash(password);
-
-
-            // Log the password hash
-            System.out.println("Password hash calculated: " + hash);
 
             // Crea un nuovo oggetto User
             User u = new User();
@@ -88,14 +82,8 @@ public class AuthenticationService {
             u.setEmail(user.getEmail());
             u.setPasswordHash(hash);
 
-            // Log the user object before saving
-            System.out.println("User to be created: " + u);
-
             // Salva l'utente nel repository
             User createdUser = userRepository.createUser(u);
-
-            // Log the created user
-            System.out.println("Created user: " + createdUser);
 
             // Costruisce la risposta
             CreateUserResponse cur = new CreateUserResponse();
@@ -103,9 +91,6 @@ public class AuthenticationService {
             cur.setName(createdUser.getName());
             cur.setSurname(createdUser.getSurname());
             cur.setEmail(createdUser.getEmail());
-
-            // Log the response object
-            System.out.println("CreateUserResponse: " + cur);
 
             return cur;
         } catch (Exception e) {
@@ -121,9 +106,21 @@ public class AuthenticationService {
         sessionRepository.delete(sessionId);
     }
 
-    public CreateUserResponse getProfile(int sessionId) {
+    public CreateUserResponse getProfile(int sessionId) throws SQLException {
         Session s = sessionRepository.getSessionById(sessionId);
         int userId = s.getUserId();
-        return userService.getUserById(userId);
+        CreateUserResponse user = userService.getUserById(userId);
+
+        // Costruisci una CreateUserResponse utilizzando i dati dell'utente
+        CreateUserResponse response = new CreateUserResponse();
+        response.setId(user.getId());
+        response.setName(user.getName());
+        response.setSurname(user.getSurname());
+        response.setEmail(user.getEmail());
+        response.setCourseSelected(user.getCourseSelected());
+        // Aggiungi altre informazioni necessarie al profilo dell'utente
+
+        return response;
     }
+
 }

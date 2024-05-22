@@ -9,7 +9,7 @@ public class CreateUserResponse {
     private String name;
     private String surname;
     private String email;
-    private List<Course> coursesSelected;
+    private Course courseSelected;
 
     public int getId() {
         return id;
@@ -43,11 +43,11 @@ public class CreateUserResponse {
         this.email = email;
     }
 
-    public List<Course> getCoursesSelected() {
-        return coursesSelected;
+    public Course getCourseSelected() {
+        return courseSelected;
     }
 
-    public void setCoursesSelected(List<Course> coursesSelected) {
-        this.coursesSelected = coursesSelected;
+    public void setCourseSelected(Course courseSelected) {
+        this.courseSelected = courseSelected;
     }
 }

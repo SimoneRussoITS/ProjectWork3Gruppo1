@@ -22,18 +22,20 @@ public class SessionRepository {
     public int insertSession(int idUser) throws SQLException {
         try (Connection c = dataSource.getConnection()) {
             try (PreparedStatement ps = c.prepareStatement("INSERT INTO session (user_id) VALUES (?)", PreparedStatement.RETURN_GENERATED_KEYS)) {
-
-                ps.setInt(1,idUser);
+                ps.setInt(1, idUser);
                 ps.executeUpdate();
                 ResultSet key = ps.getGeneratedKeys();
                 if (key.next()) {
-                    int id = key.getInt(1);
-                    return id;
+                    return key.getInt(1);
+                } else {
+                    throw new SQLException("No ID obtained.");
                 }
             }
+        } catch (SQLException e) {
+            throw new SQLException("Cannot insert new session for user " + idUser, e);
         }
-        throw new SQLException("Cannot insert new session for user " + idUser);
     }
+
 
     public void delete(int sessionId) {
         try {

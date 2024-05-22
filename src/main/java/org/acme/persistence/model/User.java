@@ -9,7 +9,7 @@ public class User {
     private String surname;
     private String email;
     private String passwordHash;
-    private List<Course> coursesSelected;
+    private Course courseSelected;
 
     public int getId() {
         return id;
@@ -51,12 +51,12 @@ public class User {
         this.passwordHash = passwordHash;
     }
 
-    public List<Course> getCoursesSelected() {
-        return coursesSelected;
+    public Course getCourseSelected() {
+        return courseSelected;
     }
 
-    public void setCoursesSelected(List<Course> coursesSelected) {
-        this.coursesSelected = coursesSelected;
+    public void setCourseSelected(Course courseSelected) {
+        this.courseSelected = courseSelected;
     }
 
     @Override
@@ -64,12 +64,21 @@ public class User {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         User user = (User) o;
-        return id == user.id && Objects.equals(name, user.name) && Objects.equals(surname, user.surname) && Objects.equals(email, user.email) && Objects.equals(passwordHash, user.passwordHash) && Objects.equals(coursesSelected, user.coursesSelected);
+        return id == user.id && Objects.equals(name, user.name) && Objects.equals(surname, user.surname) && Objects.equals(email, user.email) && Objects.equals(passwordHash, user.passwordHash) && Objects.equals(courseSelected, user.courseSelected);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, name, surname, email, passwordHash, coursesSelected);
+        return Objects.hash(id, name, surname, email, passwordHash, courseSelected);
+    }
+
+    @Override
+    public String toString() {
+        return "User{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", surname='" + surname + '\'' +
+                ", email='" + email + '}';
     }
 }
 
