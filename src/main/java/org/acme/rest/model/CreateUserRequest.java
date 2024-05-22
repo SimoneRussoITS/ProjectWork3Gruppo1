@@ -1,10 +1,15 @@
 package org.acme.rest.model;
 
+import org.acme.persistence.model.Role;
+
 public class CreateUserRequest {
     private String name;
     private String surname;
     private String email;
     private String password;
+    private Role role;
+    private int courseSelected;
+
 
     public String getName() {
         return name;
@@ -36,5 +41,21 @@ public class CreateUserRequest {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public Role getRole() {
+        return role;
+    }
+
+    public void setRole(Role role) {
+        this.role = role;
+    }
+
+    public int getCourseSelected() {
+        return courseSelected;
+    }
+
+    public void setCourseSelected(int courseSelected) {
+        this.courseSelected = courseSelected;
     }
 }

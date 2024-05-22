@@ -24,6 +24,7 @@ public class UserService {
         response.setName(user.getName());
         response.setSurname(user.getSurname());
         response.setEmail(user.getEmail());
+        response.setRole(user.getRole());
         response.setCourseSelected(user.getCourseSelected());
         return response;
     }
