@@ -163,4 +163,17 @@ public class UserRepository {
         }
         return users;
     }
+
+    public void deleteUser(int userId) {
+        try {
+            try (Connection connection = dataSource.getConnection()) {
+                try (PreparedStatement statement = connection.prepareStatement("DELETE FROM user WHERE id = ?")) {
+                    statement.setInt(1, userId);
+                    statement.executeUpdate();
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }

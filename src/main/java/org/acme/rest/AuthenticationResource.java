@@ -6,11 +6,13 @@ import jakarta.ws.rs.core.NewCookie;
 import jakarta.ws.rs.core.Response;
 import org.acme.persistence.model.Course;
 import org.acme.persistence.model.Role;
+import org.acme.persistence.model.User;
 import org.acme.persistence.repository.CourseRepository;
 import org.acme.persistence.repository.UserRepository;
 import org.acme.rest.model.CreateUserRequest;
 import org.acme.rest.model.CreateUserResponse;
 import org.acme.service.AuthenticationService;
+import org.acme.service.UserService;
 import org.acme.service.exception.SessionCreatedException;
 import org.acme.service.exception.WrongCredentialException;
 
@@ -21,11 +23,13 @@ import java.util.List;
 public class AuthenticationResource {
 
     private final AuthenticationService authenticationService;
+    private final UserService userService;
     private final CourseRepository courseRepository;
     private UserRepository userRepository;
 
-    public AuthenticationResource(AuthenticationService authenticationService, CourseRepository courseRepository, UserRepository userRepository) {
+    public AuthenticationResource(AuthenticationService authenticationService, UserService userService, CourseRepository courseRepository, UserRepository userRepository) {
         this.authenticationService = authenticationService;
+        this.userService = userService;
         this.courseRepository = courseRepository;
         this.userRepository = userRepository;
     }
@@ -66,7 +70,7 @@ public class AuthenticationResource {
     }
 
     @GET
-    @Path("/profile/users")
+    @Path("/profile/admin/users")
     @Produces(MediaType.APPLICATION_JSON)
     public List<CreateUserResponse> getUsers(@CookieParam("SESSION_COOKIE") @DefaultValue("-1") int sessionId) throws SQLException, WrongCredentialException {
         CreateUserResponse user = authenticationService.getProfile(sessionId);
@@ -78,12 +82,87 @@ public class AuthenticationResource {
     }
 
     @GET
-    @Path("/profile/courses")
+    @Path("/profile/admin/users/{userId}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public CreateUserResponse getUserById(@CookieParam("SESSION_COOKIE") @DefaultValue("-1") int sessionId, @PathParam("userId") int userId) throws SQLException, WrongCredentialException {
+        CreateUserResponse user = authenticationService.getProfile(sessionId);
+        if (user.getRole() == Role.ADMIN) {
+            return userService.getUserById(userId);
+        } else {
+            throw new WrongCredentialException();
+        }
+    }
+
+    @DELETE
+    @Path("/profile/admin/users/{userId}")
+    public Response deleteUser(@CookieParam("SESSION_COOKIE") @DefaultValue("-1") int sessionId, @PathParam("userId") int userId) throws SQLException, WrongCredentialException {
+        CreateUserResponse user = authenticationService.getProfile(sessionId);
+        if (user.getRole() == Role.ADMIN) {
+            userRepository.deleteUser(userId);
+            return Response.ok().build();
+        } else {
+            throw new WrongCredentialException();
+        }
+    }
+
+    @POST
+    @Path("/profile/admin/users")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response createUser(@CookieParam("SESSION_COOKIE") @DefaultValue("-1") int sessionId, User user) throws SQLException, WrongCredentialException {
+        CreateUserResponse userLogged = authenticationService.getProfile(sessionId);
+        if (userLogged.getRole() == Role.ADMIN) {
+            userRepository.createUser(user);
+            return Response.ok().build();
+        } else {
+            throw new WrongCredentialException();
+        }
+    }
+
+    @GET
+    @Path("/profile/admin/courses")
     @Produces(MediaType.APPLICATION_JSON)
     public List<Course> getCourses(@CookieParam("SESSION_COOKIE") @DefaultValue("-1") int sessionId) throws SQLException, WrongCredentialException {
         CreateUserResponse user = authenticationService.getProfile(sessionId);
         if (user.getRole() == Role.ADMIN) {
             return courseRepository.getAllCourses();
+
+        } else {
+            throw new WrongCredentialException();
+        }
+    }
+
+    @GET
+    @Path("/profile/admin/courses/{courseId}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Course getCourseById(@CookieParam("SESSION_COOKIE") @DefaultValue("-1") int sessionId, @PathParam("courseId") int courseId) throws SQLException, WrongCredentialException {
+        CreateUserResponse user = authenticationService.getProfile(sessionId);
+        if (user.getRole() == Role.ADMIN) {
+            return courseRepository.getCourseById(courseId);
+        } else {
+            throw new WrongCredentialException();
+        }
+    }
+
+    @DELETE
+    @Path("/profile/admin/courses/{courseId}")
+    public Response deleteCourse(@CookieParam("SESSION_COOKIE") @DefaultValue("-1") int sessionId, @PathParam("courseId") int courseId) throws SQLException, WrongCredentialException {
+        CreateUserResponse user = authenticationService.getProfile(sessionId);
+        if (user.getRole() == Role.ADMIN) {
+            courseRepository.deleteCourse(courseId);
+            return Response.ok().build();
+        } else {
+            throw new WrongCredentialException();
+        }
+    }
+
+    @POST
+    @Path("/profile/admin/courses")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response createCourse(@CookieParam("SESSION_COOKIE") @DefaultValue("-1") int sessionId, Course course) throws SQLException, WrongCredentialException {
+        CreateUserResponse user = authenticationService.getProfile(sessionId);
+        if (user.getRole() == Role.ADMIN) {
+            courseRepository.createCourse(course);
+            return Response.ok().build();
         } else {
             throw new WrongCredentialException();
         }
