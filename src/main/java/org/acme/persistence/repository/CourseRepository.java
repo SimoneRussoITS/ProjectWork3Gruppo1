@@ -112,4 +112,19 @@ public class CourseRepository {
             throw new RuntimeException(e);
         }
     }
+
+    public void updateCourse(int courseId, String name, String category) {
+        try {
+            try (Connection connection = dataSource.getConnection()) {
+                try (PreparedStatement statement = connection.prepareStatement("UPDATE course SET name = ?, category = ? WHERE id = ?")) {
+                    statement.setString(1, name);
+                    statement.setString(2, category);
+                    statement.setInt(3, courseId);
+                    statement.executeUpdate();
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }

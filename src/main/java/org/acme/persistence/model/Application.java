@@ -7,7 +7,7 @@ public class Application {
     private int idUser;
     private Timestamp createdAt;
     private State state;
-
+    private String courseName;
     public int getId() {
         return id;
     }
@@ -38,5 +38,11 @@ public class Application {
 
     public void setState(State state) {
         this.state = state;
+    }
+    public String getCourseName() {
+        return courseName;
+    }
+    public void setCourseName(String courseName) {
+        this.courseName = courseName;
     }
 }

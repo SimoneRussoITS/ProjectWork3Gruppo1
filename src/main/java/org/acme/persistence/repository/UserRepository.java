@@ -21,18 +21,25 @@ public class UserRepository {
 
     public User createUser(User user) {
         try (Connection connection = dataSource.getConnection()) {
-            String sql = "INSERT INTO user (name, surname, email, password, course_selected) VALUES (?, ?, ?, ?, ?)";
+            String sql = "INSERT INTO user (name, surname, email, password, role, state, course_selected) VALUES (?, ?, ?, ?, ?, ?, ?)";
             try (PreparedStatement statement = connection.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
                 statement.setString(1, user.getName());
                 statement.setString(2, user.getSurname());
                 statement.setString(3, user.getEmail());
                 statement.setString(4, user.getPasswordHash());
-                if (user.getCourseId() != 0) {
-                    statement.setInt(5, user.getCourseId());
+                statement.setString(5, user.getRole().name());
+                statement.setString(6, user.getState().name());
+                if (user.getCourseSelected() != null) {
+                    statement.setString(7, user.getCourseSelected().getName());
                 } else {
-                    statement.setNull(5, java.sql.Types.INTEGER);
+                    statement.setNull(7, java.sql.Types.VARCHAR);
                 }
-                statement.executeUpdate();
+
+                int affectedRows = statement.executeUpdate();
+                if (affectedRows == 0) {
+                    throw new SQLException("Creating user failed, no rows affected.");
+                }
+
                 try (ResultSet generatedKeys = statement.getGeneratedKeys()) {
                     if (generatedKeys.next()) {
                         int id = generatedKeys.getInt(1);
@@ -46,7 +53,6 @@ public class UserRepository {
         }
         return user;
     }
-
 
     public Optional<User> findByCredentials(String email, String hash) {
         try {
@@ -168,13 +174,14 @@ public class UserRepository {
         }
     }
 
-    public void updateUser(int userId, String state, int courseId) {
+    public void updateUser(int userId, String state, int courseId, String role) {
         try {
             try (Connection connection = dataSource.getConnection()) {
-                try (PreparedStatement statement = connection.prepareStatement("UPDATE user SET state = ?, course_selected = ? WHERE id = ?")) {
+                try (PreparedStatement statement = connection.prepareStatement("UPDATE user SET state = ?, course_selected = ?, role = ? WHERE id = ?")) {
                     statement.setString(1, state);
                     statement.setInt(2, courseId);
-                    statement.setInt(3, userId);
+                    statement.setString(3, role);
+                    statement.setInt(4, userId);
                     statement.executeUpdate();
                 }
             }

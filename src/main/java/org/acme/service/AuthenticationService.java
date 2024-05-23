@@ -1,10 +1,8 @@
 package org.acme.service;
 
 import jakarta.enterprise.context.ApplicationScoped;
-import org.acme.persistence.model.Role;
-import org.acme.persistence.model.Session;
-import org.acme.persistence.model.State;
-import org.acme.persistence.model.User;
+import org.acme.persistence.model.*;
+import org.acme.persistence.repository.CourseRepository;
 import org.acme.persistence.repository.SessionRepository;
 import org.acme.persistence.repository.UserRepository;
 import org.acme.rest.model.CreateUserRequest;
@@ -24,13 +22,15 @@ public class AuthenticationService {
     private final UserRepository userRepository;
     private final UserService userService;
     private final HashCalculator hashCalculator;
+    private final CourseRepository courseRepository;
 
     private final SessionRepository sessionRepository;
 
-    public AuthenticationService(UserRepository userRepository, UserService userService, HashCalculator hashCalculator, SessionRepository sessionRepository) {
+    public AuthenticationService(UserRepository userRepository, UserService userService, HashCalculator hashCalculator, CourseRepository courseRepository, SessionRepository sessionRepository) {
         this.userRepository = userRepository;
         this.userService = userService;
         this.hashCalculator = hashCalculator;
+        this.courseRepository = courseRepository;
         this.sessionRepository = sessionRepository;
     }
 
@@ -57,41 +57,53 @@ public class AuthenticationService {
         }
     }
 
-    public CreateUserResponse register(CreateUserRequest user) {
+    public CreateUserResponse register(CreateUserRequest userRequest) {
         try {
             // Calcola l'hash della password
-            String password = user.getPassword();
+            String password = userRequest.getPassword();
             String hash = hashCalculator.calculateHash(password);
+
             // Crea un nuovo oggetto User
-            User u = new User();
-            u.setName(user.getName());
-            u.setSurname(user.getSurname());
-            u.setEmail(user.getEmail());
-            u.setPasswordHash(hash);
-            u.setCourseId(user.getCourseId());
-            u.setRole(Role.valueOf("STUDENT"));
-            u.setState(State.valueOf("INACTIVE"));
-            u.setCourseSelected(user.getCourseSelected());
+            User user = new User();
+            user.setName(userRequest.getName());
+            user.setSurname(userRequest.getSurname());
+            user.setEmail(userRequest.getEmail());
+            user.setPasswordHash(hash);
+
+            // Imposta il ruolo e lo stato
+            user.setRole(Role.STUDENT);
+            user.setState(State.INACTIVE);
+
+            // Imposta courseSelected se presente
+            if (userRequest.getCourseId() != 0) {
+                // Supponiamo che tu abbia un metodo per ottenere il corso da un ID
+                Course course = courseRepository.getCourseById(userRequest.getCourseId());
+                user.setCourseSelected(course);
+            } else {
+                user.setCourseSelected(null);
+            }
+
             // Salva l'utente nel repository
-            User createdUser = userRepository.createUser(u);
+            User createdUser = userRepository.createUser(user);
+
             // Costruisce la risposta
-            CreateUserResponse cur = new CreateUserResponse();
-            cur.setId(createdUser.getId());
-            cur.setName(createdUser.getName());
-            cur.setSurname(createdUser.getSurname());
-            cur.setEmail(createdUser.getEmail());
-            cur.setRole(createdUser.getRole());
-            cur.setState(createdUser.getState());
-            cur.setCourseId(createdUser.getCourseId());
-            cur.setCourseSelected(createdUser.getCourseSelected());
-            return cur;
+            CreateUserResponse response = new CreateUserResponse();
+            response.setId(createdUser.getId());
+            response.setName(createdUser.getName());
+            response.setSurname(createdUser.getSurname());
+            response.setEmail(createdUser.getEmail());
+            response.setRole(createdUser.getRole());
+            response.setState(createdUser.getState());
+            response.setCourseSelected(createdUser.getCourseSelected());
+
+            return response;
         } catch (Exception e) {
             // Log the exception
             e.printStackTrace();
-            // Puoi lanciare una RuntimeException o gestire l'eccezione in un altro modo
             throw new RuntimeException("Error while registering user", e);
         }
     }
+
 
     public void logout(int sessionId) {
         sessionRepository.delete(sessionId);
