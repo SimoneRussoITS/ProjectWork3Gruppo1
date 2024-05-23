@@ -21,30 +21,22 @@ public class UserRepository {
 
     public User createUser(User user) {
         try (Connection connection = dataSource.getConnection()) {
-            String sql = "INSERT INTO user (name, surname, email, password, role, state, course_selected) VALUES (?, ?, ?, ?, ?, ?, ?)";
+            String sql = "INSERT INTO user (name, surname, email, password, course_selected) VALUES (?, ?, ?, ?, ?)";
             try (PreparedStatement statement = connection.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
-
                 statement.setString(1, user.getName());
                 statement.setString(2, user.getSurname());
                 statement.setString(3, user.getEmail());
                 statement.setString(4, user.getPasswordHash());
-                statement.setString(5, String.valueOf(user.getRole()));
-                statement.setString(6, String.valueOf(user.getState()));
-
                 if (user.getCourseId() != 0) {
-                    statement.setInt(7, user.getCourseId());
+                    statement.setInt(5, user.getCourseId());
                 } else {
-                    statement.setNull(7, java.sql.Types.INTEGER);
+                    statement.setNull(5, java.sql.Types.INTEGER);
                 }
-
                 statement.executeUpdate();
-
                 try (ResultSet generatedKeys = statement.getGeneratedKeys()) {
                     if (generatedKeys.next()) {
                         int id = generatedKeys.getInt(1);
                         user.setId(id);
-                        // Log the generated ID
-                        System.out.println("Generated ID: " + id);
                     }
                 }
             }
@@ -62,7 +54,6 @@ public class UserRepository {
                 try (PreparedStatement statement = connection.prepareStatement("SELECT id, name, surname, email, password, role, state, course_selected FROM user WHERE email = ? AND password = ?")) {
                     statement.setString(1, email); // Imposta il primo parametro con l'email
                     statement.setString(2, hash); // Imposta il secondo parametro con l'hash della password
-
                     try (ResultSet resultSet = statement.executeQuery()) {
                         if (resultSet.next()) {
                             User user = new User();

@@ -1,7 +1,9 @@
 package org.acme.service;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import org.acme.persistence.model.Role;
 import org.acme.persistence.model.Session;
+import org.acme.persistence.model.State;
 import org.acme.persistence.model.User;
 import org.acme.persistence.repository.SessionRepository;
 import org.acme.persistence.repository.UserRepository;
@@ -57,25 +59,21 @@ public class AuthenticationService {
 
     public CreateUserResponse register(CreateUserRequest user) {
         try {
-
             // Calcola l'hash della password
             String password = user.getPassword();
             String hash = hashCalculator.calculateHash(password);
-
             // Crea un nuovo oggetto User
             User u = new User();
             u.setName(user.getName());
             u.setSurname(user.getSurname());
             u.setEmail(user.getEmail());
             u.setPasswordHash(hash);
-            u.setRole(user.getRole());
-            u.setState(user.getState());
             u.setCourseId(user.getCourseId());
+            u.setRole(Role.valueOf("STUDENT"));
+            u.setState(State.valueOf("INACTIVE"));
             u.setCourseSelected(user.getCourseSelected());
-
             // Salva l'utente nel repository
             User createdUser = userRepository.createUser(u);
-
             // Costruisce la risposta
             CreateUserResponse cur = new CreateUserResponse();
             cur.setId(createdUser.getId());
@@ -86,12 +84,10 @@ public class AuthenticationService {
             cur.setState(createdUser.getState());
             cur.setCourseId(createdUser.getCourseId());
             cur.setCourseSelected(createdUser.getCourseSelected());
-
             return cur;
         } catch (Exception e) {
             // Log the exception
             e.printStackTrace();
-
             // Puoi lanciare una RuntimeException o gestire l'eccezione in un altro modo
             throw new RuntimeException("Error while registering user", e);
         }
