@@ -4,9 +4,11 @@ import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.NewCookie;
 import jakarta.ws.rs.core.Response;
+import org.acme.persistence.model.Application;
 import org.acme.persistence.model.Course;
 import org.acme.persistence.model.Role;
 import org.acme.persistence.model.User;
+import org.acme.persistence.repository.ApplicationRepository;
 import org.acme.persistence.repository.CourseRepository;
 import org.acme.persistence.repository.UserRepository;
 import org.acme.rest.model.CreateUserRequest;
@@ -25,13 +27,15 @@ public class AuthenticationResource {
     private final AuthenticationService authenticationService;
     private final UserService userService;
     private final CourseRepository courseRepository;
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
+    private final ApplicationRepository applicationRepository;
 
-    public AuthenticationResource(AuthenticationService authenticationService, UserService userService, CourseRepository courseRepository, UserRepository userRepository) {
+    public AuthenticationResource(AuthenticationService authenticationService, UserService userService, CourseRepository courseRepository, UserRepository userRepository, ApplicationRepository applicationRepository) {
         this.authenticationService = authenticationService;
         this.userService = userService;
         this.courseRepository = courseRepository;
         this.userRepository = userRepository;
+        this.applicationRepository = applicationRepository;
     }
 
     @POST
@@ -163,6 +167,18 @@ public class AuthenticationResource {
         if (user.getRole() == Role.ADMIN) {
             courseRepository.createCourse(course);
             return Response.ok().build();
+        } else {
+            throw new WrongCredentialException();
+        }
+    }
+
+    @GET
+    @Path("/profile/admin/applications")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<Application> getApplications(@CookieParam("SESSION_COOKIE") @DefaultValue("-1") int sessionId) throws SQLException, WrongCredentialException {
+        CreateUserResponse user = authenticationService.getProfile(sessionId);
+        if (user.getRole() == Role.ADMIN) {
+            return applicationRepository.getAllApplications();
         } else {
             throw new WrongCredentialException();
         }

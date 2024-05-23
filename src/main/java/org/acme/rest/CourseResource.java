@@ -27,4 +27,6 @@ public class CourseResource {
     public List<Course> getCoursesByCategory(@PathParam("category") String category) {
         return courseRepository.getCoursesByCategory(category.toUpperCase());
     }
+
+    
 }
