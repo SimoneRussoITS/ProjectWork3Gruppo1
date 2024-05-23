@@ -91,7 +91,7 @@ public class ApplicationRepository {
         try (Connection connection = dataSource.getConnection()) {
             try (PreparedStatement statement = connection.prepareStatement(
                     "INSERT INTO application (user_id, state, course_name) VALUES (?, ?, ?)")) {
-                String state = "INACTIVE";
+                String state = "PENDING";
                 statement.setInt(1, id);
                 statement.setString(2, state);
                 statement.setString(3, courseName);

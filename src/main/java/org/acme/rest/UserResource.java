@@ -1,38 +1,92 @@
 package org.acme.rest;
 
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.POST;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
-import org.acme.persistence.model.User;
+import jakarta.ws.rs.core.Response;
+import org.acme.persistence.model.*;
 import org.acme.persistence.repository.UserRepository;
 import org.acme.rest.model.CreateUserRequest;
 import org.acme.rest.model.CreateUserResponse;
+import org.acme.service.AuthenticationService;
 import org.acme.service.UserService;
 import org.acme.persistence.repository.UserRepository;
+import org.acme.service.exception.WrongCredentialException;
 
 import java.sql.SQLException;
 import java.util.List;
+import java.util.logging.Logger;
 
 @Path("/users")
 public class UserResource {
     private final UserRepository userRepository;
+    private final AuthenticationService authenticationService;
+    private final UserService userService;
 
-    public UserResource(UserRepository userRepository) {
+    public UserResource(UserRepository userRepository, AuthenticationService authenticationService, UserService userService) {
         this.userRepository = userRepository;
+        this.authenticationService = authenticationService;
+        this.userService = userService;
     }
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public List<CreateUserResponse> getAllUsers() {
-        return userRepository.getAllUsers();
+    public List<CreateUserResponse> getUsers(@CookieParam("SESSION_COOKIE") @DefaultValue("-1") int sessionId) throws WrongCredentialException, SQLException {
+        CreateUserResponse user = authenticationService.getProfile(sessionId);
+        if (user.getRole() == Role.ADMIN) {
+            return userRepository.getAllUsers();
+        } else if (user.getRole() == Role.STUDENT || user.getRole() == Role.TEACHER) {
+            return (List<CreateUserResponse>) authenticationService.getProfile(sessionId);
+        } else {
+            throw new WrongCredentialException();
+        }
+    }
+
+    @POST
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response createUser(@CookieParam("SESSION_COOKIE") @DefaultValue("-1") int sessionId, User user) throws SQLException, WrongCredentialException {
+        CreateUserResponse userLogged = authenticationService.getProfile(sessionId);
+        if (userLogged.getRole() == Role.ADMIN) {
+            userRepository.createUser(user);
+            return Response.ok().build();
+        } else {
+            throw new WrongCredentialException();
+        }
     }
 
     @GET
-    @Path("/{id}")
+    @Path("/{userId}")
     @Produces(MediaType.APPLICATION_JSON)
-    public User getUser(int id) throws SQLException {
-        return userRepository.getUserById(id);
+    public CreateUserResponse getUserById(@CookieParam("SESSION_COOKIE") @DefaultValue("-1") int sessionId, @PathParam("userId") int userId) throws SQLException, WrongCredentialException {
+        CreateUserResponse user = authenticationService.getProfile(sessionId);
+        if (user.getRole() == Role.ADMIN) {
+            return userService.getUserById(userId);
+        } else {
+            throw new WrongCredentialException();
+        }
+    }
+
+    @PUT
+    @Path("/{userId}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response updateUser(@CookieParam("SESSION_COOKIE") @DefaultValue("-1") int sessionId, @PathParam("userId") int userId, @FormParam("state") String state, @FormParam("courseId") int courseId, @FormParam("role") String role) throws SQLException, WrongCredentialException {
+        CreateUserResponse userLogged = authenticationService.getProfile(sessionId);
+        if (userLogged.getRole() == Role.ADMIN) {
+            userRepository.updateUser(userId, state, courseId, role);
+            return Response.ok().build();
+        } else {
+            throw new WrongCredentialException();
+        }
+    }
+
+    @DELETE
+    @Path("/{userId}")
+    public Response deleteUser(@CookieParam("SESSION_COOKIE") @DefaultValue("-1") int sessionId, @PathParam("userId") int userId) throws SQLException, WrongCredentialException {
+        CreateUserResponse user = authenticationService.getProfile(sessionId);
+        if (user.getRole() == Role.ADMIN) {
+            userRepository.deleteUser(userId);
+            return Response.ok().build();
+        } else {
+            throw new WrongCredentialException();
+        }
     }
 }
