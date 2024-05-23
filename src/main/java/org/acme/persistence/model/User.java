@@ -11,6 +11,7 @@ public class User {
     private String passwordHash;
     private Role role;
     private State state;
+    private int courseId;
     private Course courseSelected;
 
     public int getId() {
@@ -69,6 +70,14 @@ public class User {
         this.state = state;
     }
 
+    public int getCourseId() {
+        return courseId;
+    }
+
+    public void setCourseId(int courseId) {
+        this.courseId = courseId;
+    }
+
     public Course getCourseSelected() {
         return courseSelected;
     }
@@ -102,5 +111,6 @@ public class User {
                 ", courseSelected=" + courseSelected +
                 '}';
     }
+
 }
 

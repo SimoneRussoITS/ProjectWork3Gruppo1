@@ -23,6 +23,7 @@ public class UserService {
         response.setSurname(user.getSurname());
         response.setEmail(user.getEmail());
         response.setRole(user.getRole());
+        response.setState(user.getState());
         response.setCourseSelected(user.getCourseSelected());
         return response;
     }

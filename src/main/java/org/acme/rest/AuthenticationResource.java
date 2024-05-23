@@ -4,6 +4,9 @@ import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.NewCookie;
 import jakarta.ws.rs.core.Response;
+import org.acme.persistence.model.Course;
+import org.acme.persistence.model.Role;
+import org.acme.persistence.repository.CourseRepository;
 import org.acme.persistence.repository.UserRepository;
 import org.acme.rest.model.CreateUserRequest;
 import org.acme.rest.model.CreateUserResponse;
@@ -18,10 +21,12 @@ import java.util.List;
 public class AuthenticationResource {
 
     private final AuthenticationService authenticationService;
+    private final CourseRepository courseRepository;
     private UserRepository userRepository;
 
-    public AuthenticationResource(AuthenticationService authenticationService, UserRepository userRepository) {
+    public AuthenticationResource(AuthenticationService authenticationService, CourseRepository courseRepository, UserRepository userRepository) {
         this.authenticationService = authenticationService;
+        this.courseRepository = courseRepository;
         this.userRepository = userRepository;
     }
 
@@ -65,23 +70,23 @@ public class AuthenticationResource {
     @Produces(MediaType.APPLICATION_JSON)
     public List<CreateUserResponse> getUsers(@CookieParam("SESSION_COOKIE") @DefaultValue("-1") int sessionId) throws SQLException, WrongCredentialException {
         CreateUserResponse user = authenticationService.getProfile(sessionId);
-        if (user.getRole().equals("ADMIN")) {
+        if (user.getRole() == Role.ADMIN) {
             return userRepository.getAllUsers();
         } else {
             throw new WrongCredentialException();
         }
     }
 
-//    @GET
-//    @Path("/profile/courses")
-//    @Produces(MediaType.APPLICATION_JSON)
-//    public List<CreateUserResponse> getCourses(@CookieParam("SESSION_COOKIE") @DefaultValue("-1") int sessionId) throws SQLException, WrongCredentialException {
-//        CreateUserResponse user = authenticationService.getProfile(sessionId);
-//        if (user.getRole().equals("ADMIN")) {
-//            //return userRepository.getAllCourses();
-//        } else {
-//            throw new WrongCredentialException();
-//        }
-//    }
+    @GET
+    @Path("/profile/courses")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<Course> getCourses(@CookieParam("SESSION_COOKIE") @DefaultValue("-1") int sessionId) throws SQLException, WrongCredentialException {
+        CreateUserResponse user = authenticationService.getProfile(sessionId);
+        if (user.getRole() == Role.ADMIN) {
+            return courseRepository.getAllCourses();
+        } else {
+            throw new WrongCredentialException();
+        }
+    }
 }
 

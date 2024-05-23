@@ -25,6 +25,6 @@ public class CourseResource {
     @Path("/{category}")
     @Produces(MediaType.APPLICATION_JSON)
     public List<Course> getCoursesByCategory(@PathParam("category") String category) {
-        return courseRepository.getCoursesByCategory(category);
+        return courseRepository.getCoursesByCategory(category.toUpperCase());
     }
 }

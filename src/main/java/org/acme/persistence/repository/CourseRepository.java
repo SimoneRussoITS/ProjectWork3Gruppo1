@@ -12,14 +12,20 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 
 @ApplicationScoped
 public class CourseRepository {
 
-    private DataSource dataSource;
+    private final DataSource dataSource;
+
+    public CourseRepository(DataSource dataSource) {
+        this.dataSource = dataSource;
+    }
 
     public List<Course> getAllCourses() {
+        List<Course> courses = new ArrayList<>();
         try {
             try (Connection connection = dataSource.getConnection()) {
                 try (PreparedStatement statement = connection.prepareStatement("SELECT id, name, category FROM course")) {
@@ -29,17 +35,18 @@ public class CourseRepository {
                         course.setIdCourse(resultSet.getInt("id"));
                         course.setName(resultSet.getString("name"));
                         course.setCategory(Category.valueOf(resultSet.getString("category")));
-                        return List.of(course);
+                        courses.add(course);
                     }
                 }
             }
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
-        return List.of();
+        return courses;
     }
 
     public List<Course> getCoursesByCategory(String category) {
+        List<Course> courses = new ArrayList<>();
         try {
             try (Connection connection = dataSource.getConnection()) {
                 try (PreparedStatement statement = connection.prepareStatement("SELECT id, name, category FROM course WHERE category = ?")) {
@@ -50,13 +57,13 @@ public class CourseRepository {
                         course.setIdCourse(resultSet.getInt("id"));
                         course.setName(resultSet.getString("name"));
                         course.setCategory(Category.valueOf(resultSet.getString("category")));
-                        return List.of(course);
+                        courses.add(course);
                     }
                 }
             }
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
-        return List.of();
+        return courses;
     }
     }

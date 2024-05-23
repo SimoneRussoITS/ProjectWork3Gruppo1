@@ -1,5 +1,6 @@
 package org.acme.rest.model;
 
+import org.acme.persistence.model.Course;
 import org.acme.persistence.model.Role;
 import org.acme.persistence.model.State;
 
@@ -10,7 +11,8 @@ public class CreateUserRequest {
     private String password;
     private Role role;
     private State state;
-    private int courseSelected;
+    private int courseId;
+    private Course courseSelected;
 
     public String getName() {
         return name;
@@ -60,11 +62,19 @@ public class CreateUserRequest {
         this.state = state;
     }
 
-    public int getCourseSelected() {
+    public int getCourseId() {
+        return courseId;
+    }
+
+    public void setCourseId(int courseId) {
+        this.courseId = courseId;
+    }
+
+    public Course getCourseSelected() {
         return courseSelected;
     }
 
-    public void setCourseSelected(int courseSelected) {
+    public void setCourseSelected(Course courseSelected) {
         this.courseSelected = courseSelected;
     }
 }

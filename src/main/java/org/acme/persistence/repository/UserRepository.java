@@ -6,6 +6,7 @@ import org.acme.rest.model.CreateUserResponse;
 
 import javax.sql.DataSource;
 import java.sql.*;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -22,9 +23,6 @@ public class UserRepository {
         try (Connection connection = dataSource.getConnection()) {
             String sql = "INSERT INTO user (name, surname, email, password, role, state, course_selected) VALUES (?, ?, ?, ?, ?, ?, ?)";
             try (PreparedStatement statement = connection.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
-                // Log the prepared statement and user details
-                System.out.println("Preparing statement: " + sql);
-                System.out.println("User details: " + user);
 
                 statement.setString(1, user.getName());
                 statement.setString(2, user.getSurname());
@@ -33,10 +31,10 @@ public class UserRepository {
                 statement.setString(5, String.valueOf(user.getRole()));
                 statement.setString(6, String.valueOf(user.getState()));
 
-                if (user.getCourseSelected() == null) {
-                    statement.setNull(7, java.sql.Types.NULL);
+                if (user.getCourseId() != 0) {
+                    statement.setInt(7, user.getCourseId());
                 } else {
-                    statement.setString(7, String.valueOf(user.getCourseSelected()));
+                    statement.setNull(7, java.sql.Types.INTEGER);
                 }
 
                 statement.executeUpdate();
@@ -75,7 +73,7 @@ public class UserRepository {
                             user.setPasswordHash(resultSet.getString("password"));
                             user.setRole(Role.valueOf(resultSet.getString("role")));
                             user.setState(State.valueOf(resultSet.getString("state")));
-                            user.setCourseSelected((Course) resultSet.getObject("course_selected"));
+                            user.setCourseId(resultSet.getInt("course_selected"));
                             return Optional.of(user);
                         }
                     }
@@ -107,24 +105,19 @@ public class UserRepository {
                     user.setEmail(rs.getString("email"));
                     user.setRole(Role.valueOf(rs.getString("role")));
                     user.setState(State.valueOf(rs.getString("state")));
+                    user.setCourseId(rs.getInt("course_selected"));
 
-                    int courseId = rs.getInt("course_id");
+                    int courseId = rs.getInt("course_selected");
+
                     if (courseId != 0) {
                         Course course = new Course();
                         course.setIdCourse(courseId);
                         course.setName(rs.getString("course_name"));
                         course.setCategory(Category.valueOf(rs.getString("category")));
                         user.setCourseSelected(course);
-                    } else {
-                        user.setCourseSelected(null); // Gestione del caso in cui non c'è un corso
                     }
 
-                    System.out.println("User found: " + user.getName());
-                    if (user.getCourseSelected() != null) {
-                        System.out.println("Course found: " + user.getCourseSelected().getName());
-                    } else {
-                        System.out.println("No course selected for user.");
-                    }
+
                 } else {
                     System.out.println("User not found with id: " + userId);
                 }
@@ -133,13 +126,14 @@ public class UserRepository {
         return user;
     }
 
-
-
-
     public List<CreateUserResponse> getAllUsers() {
+        List<CreateUserResponse> users = new ArrayList<>();
         try {
             try (Connection connection = dataSource.getConnection()) {
-                try (PreparedStatement statement = connection.prepareStatement("SELECT id, name, surname, email, role, state, course_selected FROM user")) {
+                try (PreparedStatement statement = connection.prepareStatement("SELECT u.id, u.name, u.surname, u.email, u.role, u.state, u.course_selected, c.id as course_id, c.name as course_name, c.category " +
+                        "FROM user u " +
+                        "LEFT JOIN course c ON u.course_selected = c.id")) {
+
                     var resultSet = statement.executeQuery();
                     while (resultSet.next()) {
                         var user = new CreateUserResponse();
@@ -147,16 +141,26 @@ public class UserRepository {
                         user.setName(resultSet.getString("name"));
                         user.setSurname(resultSet.getString("surname"));
                         user.setEmail(resultSet.getString("email"));
-                        user.setRole(resultSet.getObject("role", Role.class));
-                        user.setState(resultSet.getObject("state", State.class));
-                        user.setCourseSelected(resultSet.getObject("courses_selected", Course.class));
-                        return List.of(user);
+                        user.setRole(Role.valueOf(resultSet.getString("role")));
+                        user.setState(State.valueOf(resultSet.getString("state")));
+                        user.setCourseId(resultSet.getInt("course_selected"));
+
+                        int courseId = resultSet.getInt("course_selected");
+                        if (courseId != 0) {
+                            Course course = new Course();
+                            course.setIdCourse(courseId);
+                            course.setName(resultSet.getString("course_name"));
+                            course.setCategory(Category.valueOf(resultSet.getString("category")));
+                            user.setCourseSelected(course);
+                        }
+
+                        users.add(user);
                     }
                 }
             }
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
-        return List.of();
+        return users;
     }
 }

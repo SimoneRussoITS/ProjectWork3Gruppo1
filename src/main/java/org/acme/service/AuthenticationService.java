@@ -70,6 +70,8 @@ public class AuthenticationService {
             u.setPasswordHash(hash);
             u.setRole(user.getRole());
             u.setState(user.getState());
+            u.setCourseId(user.getCourseId());
+            u.setCourseSelected(user.getCourseSelected());
 
             // Salva l'utente nel repository
             User createdUser = userRepository.createUser(u);
@@ -82,6 +84,8 @@ public class AuthenticationService {
             cur.setEmail(createdUser.getEmail());
             cur.setRole(createdUser.getRole());
             cur.setState(createdUser.getState());
+            cur.setCourseId(createdUser.getCourseId());
+            cur.setCourseSelected(createdUser.getCourseSelected());
 
             return cur;
         } catch (Exception e) {

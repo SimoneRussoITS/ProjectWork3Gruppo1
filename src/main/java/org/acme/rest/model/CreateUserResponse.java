@@ -11,6 +11,7 @@ public class CreateUserResponse {
     private String email;
     private Role role;
     private State state;
+    private int courseId;
     private Course courseSelected;
 
     public int getId() {
@@ -59,6 +60,14 @@ public class CreateUserResponse {
 
     public void setState(State state) {
         this.state = state;
+    }
+
+    public int getCourseId() {
+        return courseId;
+    }
+
+    public void setCourseId(int courseId) {
+        this.courseId = courseId;
     }
 
     public Course getCourseSelected() {

@@ -17,6 +17,7 @@ bin/
 *.ipr
 *.iml
 *.iws
+*.application.properties
 
 # NetBeans
 nb-configuration.xml
