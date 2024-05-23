@@ -28,5 +28,10 @@ public class CourseResource {
         return courseRepository.getCoursesByCategory(category.toUpperCase());
     }
 
-    
+    @GET
+    @Path("/{courseId}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Course getCourseById(@PathParam("courseId") int courseId) {
+        return courseRepository.getCourseById(courseId);
+    }
 }

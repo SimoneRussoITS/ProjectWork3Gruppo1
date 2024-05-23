@@ -97,6 +97,19 @@ public class AuthenticationResource {
         }
     }
 
+    @PUT
+    @Path("/profile/admin/users/{userId}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response updateUser(@CookieParam("SESSION_COOKIE") @DefaultValue("-1") int sessionId, @PathParam("userId") int userId, @FormParam("state") String state, @FormParam("courseId") int courseId) throws SQLException, WrongCredentialException {
+        CreateUserResponse userLogged = authenticationService.getProfile(sessionId);
+        if (userLogged.getRole() == Role.ADMIN) {
+            userRepository.updateUser(userId, state, courseId);
+            return Response.ok().build();
+        } else {
+            throw new WrongCredentialException();
+        }
+    }
+
     @DELETE
     @Path("/profile/admin/users/{userId}")
     public Response deleteUser(@CookieParam("SESSION_COOKIE") @DefaultValue("-1") int sessionId, @PathParam("userId") int userId) throws SQLException, WrongCredentialException {

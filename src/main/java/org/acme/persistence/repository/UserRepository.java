@@ -176,4 +176,19 @@ public class UserRepository {
             throw new RuntimeException(e);
         }
     }
+
+    public void updateUser(int userId, String state, int courseId) {
+        try {
+            try (Connection connection = dataSource.getConnection()) {
+                try (PreparedStatement statement = connection.prepareStatement("UPDATE user SET state = ?, course_selected = ? WHERE id = ?")) {
+                    statement.setString(1, state);
+                    statement.setInt(2, courseId);
+                    statement.setInt(3, userId);
+                    statement.executeUpdate();
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }
