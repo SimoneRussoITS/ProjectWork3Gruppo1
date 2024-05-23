@@ -183,5 +183,30 @@ public class AuthenticationResource {
             throw new WrongCredentialException();
         }
     }
+
+    @GET
+    @Path("/profile/admin/applications/{userId}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<Application> getApplicationsByUserId(@CookieParam("SESSION_COOKIE") @DefaultValue("-1") int sessionId, @PathParam("userId") int userId) throws SQLException, WrongCredentialException {
+        CreateUserResponse user = authenticationService.getProfile(sessionId);
+        if (user.getRole() == Role.ADMIN) {
+            return applicationRepository.getApplicationsByUserId(userId);
+        } else {
+            throw new WrongCredentialException();
+        }
+    }
+
+    @PUT
+    @Path("/profile/admin/applications/{userId}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response updateApplication(@CookieParam("SESSION_COOKIE") @DefaultValue("-1") int sessionId, @PathParam("userId") int userId, Application application) throws SQLException, WrongCredentialException {
+        CreateUserResponse user = authenticationService.getProfile(sessionId);
+        if (user.getRole() == Role.ADMIN) {
+            applicationRepository.updateApplication(userId, application);
+            return Response.ok().build();
+        } else {
+            throw new WrongCredentialException();
+        }
+    }
 }
 
