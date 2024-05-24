@@ -47,7 +47,7 @@ public class ApplicationResource {
         log.info("Received courseName: " + courseName);
 
         CreateUserResponse user = authenticationService.getProfile(sessionId);
-        if (user.getRole() == Role.STUDENT) {
+        if (user.getRole() == Role.STUDENT && user.getState() == State.INACTIVE) {
             applicationRepository.createApplication(user.getId(), courseName);
             return Response.ok().build();
         } else {
