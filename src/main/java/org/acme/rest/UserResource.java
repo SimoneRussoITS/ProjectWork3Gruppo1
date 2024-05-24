@@ -5,16 +5,14 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.acme.persistence.model.*;
 import org.acme.persistence.repository.UserRepository;
-import org.acme.rest.model.CreateUserRequest;
 import org.acme.rest.model.CreateUserResponse;
 import org.acme.service.AuthenticationService;
 import org.acme.service.UserService;
-import org.acme.persistence.repository.UserRepository;
 import org.acme.service.exception.WrongCredentialException;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Logger;
 
 @Path("/users")
 public class UserResource {
@@ -35,7 +33,9 @@ public class UserResource {
         if (user.getRole() == Role.ADMIN) {
             return userRepository.getAllUsers();
         } else if (user.getRole() == Role.STUDENT || user.getRole() == Role.TEACHER) {
-            return (List<CreateUserResponse>) authenticationService.getProfile(sessionId);
+            List<CreateUserResponse> singleUser = new ArrayList<>();
+            singleUser.add(authenticationService.getProfile(sessionId));
+            return singleUser;
         } else {
             throw new WrongCredentialException();
         }

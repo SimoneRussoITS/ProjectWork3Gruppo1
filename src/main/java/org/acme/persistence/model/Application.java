@@ -8,6 +8,8 @@ public class Application {
     private Timestamp createdAt;
     private State state;
     private String courseName;
+    private User user;
+
     public int getId() {
         return id;
     }
@@ -39,10 +41,20 @@ public class Application {
     public void setState(State state) {
         this.state = state;
     }
+
     public String getCourseName() {
         return courseName;
     }
+
     public void setCourseName(String courseName) {
         this.courseName = courseName;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
     }
 }

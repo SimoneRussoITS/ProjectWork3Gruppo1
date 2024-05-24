@@ -1,6 +1,5 @@
 package org.acme.persistence.model;
 
-import java.util.List;
 import java.util.Objects;
 
 public class User {

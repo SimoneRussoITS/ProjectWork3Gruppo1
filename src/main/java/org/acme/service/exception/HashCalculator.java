@@ -7,9 +7,6 @@ import jakarta.enterprise.context.ApplicationScoped;
 public class HashCalculator {
     public String calculateHash(String password) {
         SHA512 algoritmo = new SHA512();
-
         return algoritmo.hash(null, password);
     }
-
-
 }
