@@ -48,7 +48,7 @@ public class ApplicationResource {
 
         CreateUserResponse user = authenticationService.getProfile(sessionId);
         if (user.getRole() == Role.STUDENT && user.getState() == State.INACTIVE) {
-            applicationRepository.createApplication(user.getId(), courseName);
+            applicationRepository.createApplicationAndCandidate(user.getId(), courseName);
             return Response.ok().build();
         } else {
             throw new WrongCredentialException();
