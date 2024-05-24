@@ -8,6 +8,7 @@ import org.acme.persistence.model.User;
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -48,7 +49,6 @@ public class ApplicationRepository {
         }
         return applications;
     }
-
     public List<Application> getApplicationsByUserId(int userId) {
         List<Application> applications = new ArrayList<>();
         try {
@@ -79,35 +79,37 @@ public class ApplicationRepository {
         return applications;
     }
 
+
     public void updateApplication(int userId, int applicationId, State stateUpdated) {
         try (Connection connection = dataSource.getConnection()) {
-            // Update the state in the user table
-            try (PreparedStatement statement = connection.prepareStatement("UPDATE user SET state = ? WHERE id = ?")) {
-                statement.setString(1, String.valueOf(stateUpdated));
-                statement.setInt(2, userId);
-                statement.executeUpdate();
-            }
-            // Update user.course_selected based on the application and course tables
-            try (PreparedStatement statement = connection.prepareStatement("UPDATE user JOIN application ON user.id = application.user_id JOIN course ON application.course_name = course.name SET user.course_selected = course.id WHERE user.id = ? AND application.id = ?")) {
-                statement.setInt(1, userId);
-                statement.setInt(2, applicationId);
-                statement.executeUpdate();
-            }
-            // Update the state in the application table
-            try (PreparedStatement statement = connection.prepareStatement("UPDATE application SET state = ? WHERE user_id = ? AND id = ?")) {
-                statement.setString(1, String.valueOf(stateUpdated));
-                statement.setInt(2, userId);
-                statement.setInt(3, applicationId);
-                statement.executeUpdate();
-            }
-            // If the updated state is "ACCEPTED", block all other applications for the same user
-            if ("ACTIVE".equals(String.valueOf(stateUpdated))) {
-                try (PreparedStatement statement = connection.prepareStatement("UPDATE application SET state = 'BLOCKED' WHERE user_id = ? AND id != ?")) {
+                try (PreparedStatement statement = connection.prepareStatement("UPDATE user SET state = ? WHERE id = ?")) {
+                    statement.setString(1, String.valueOf(stateUpdated));
+                    statement.setInt(2, userId);
+                    statement.executeUpdate();
+                }
+                try (PreparedStatement statement = connection.prepareStatement("UPDATE user JOIN application ON user.id = application.user_id JOIN course ON application.course_name = course.name SET user.course_selected = course.id WHERE user.id = ? AND application.id = ?")) {
                     statement.setInt(1, userId);
                     statement.setInt(2, applicationId);
                     statement.executeUpdate();
                 }
-            }
+                try (PreparedStatement statement = connection.prepareStatement("UPDATE application SET state = ? WHERE user_id = ? AND id = ?")) {
+                    statement.setString(1, String.valueOf(stateUpdated));
+                    statement.setInt(2, userId);
+                    statement.setInt(3, applicationId);
+                    statement.executeUpdate();
+                }
+                if ("ACTIVE".equals(String.valueOf(stateUpdated))) {
+                    try (PreparedStatement statement = connection.prepareStatement("UPDATE application SET application.state = 'BLOCKED' WHERE user_id = ? AND id != ?")) {
+                        statement.setInt(1, userId);
+                        statement.setInt(2, applicationId);
+                        statement.executeUpdate();
+                    }
+                }
+                try (PreparedStatement statement = connection.prepareStatement("UPDATE user SET state = ? WHERE id = ?")) {
+                    statement.setString(1, String.valueOf(stateUpdated));
+                    statement.setInt(2, userId);
+                    statement.executeUpdate();
+                }
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
