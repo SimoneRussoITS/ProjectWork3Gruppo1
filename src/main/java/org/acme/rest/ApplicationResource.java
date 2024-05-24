@@ -15,7 +15,7 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.logging.Logger;
 
-@Path("/application")
+@Path("/applications")
 public class ApplicationResource {
     private final ApplicationRepository applicationRepository;
     private final AuthenticationService authenticationService;

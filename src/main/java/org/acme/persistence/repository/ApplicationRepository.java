@@ -70,16 +70,21 @@ public class ApplicationRepository {
     public void updateApplication(int userId, int applicationId, State stateUpdated) {
         try {
             try (Connection connection = dataSource.getConnection()) {
-                try (PreparedStatement statement1 = connection.prepareStatement("UPDATE user SET state = ? WHERE id = ?")) {
-                    statement1.setString(1, String.valueOf(stateUpdated));
-                    statement1.setInt(2, userId);
-                    statement1.executeUpdate();
+                try (PreparedStatement statement = connection.prepareStatement("UPDATE user SET state = ? WHERE id = ?")) {
+                    statement.setString(1, String.valueOf(stateUpdated));
+                    statement.setInt(2, userId);
+                    statement.executeUpdate();
                 }
-                try (PreparedStatement statement2 = connection.prepareStatement("UPDATE application SET state = ? WHERE user_id = ? AND id = ?")) {
-                    statement2.setString(1, String.valueOf(stateUpdated));
-                    statement2.setInt(2, userId);
-                    statement2.setInt(3, applicationId);
-                    statement2.executeUpdate();
+                try (PreparedStatement statement = connection.prepareStatement("UPDATE user INNER JOIN course ON user.course_selected = course.id INNER  JOIN application ON course.name = application.course_name SET user.course_selected = course.id WHERE application.user_id = ? AND application.id = ?")) {
+                    statement.setInt(1, userId);
+                    statement.setInt(2  , applicationId);
+                    statement.executeUpdate();
+                }
+                try (PreparedStatement statement= connection.prepareStatement("UPDATE application SET state = ? WHERE user_id = ? AND id = ?")) {
+                    statement.setString(1, String.valueOf(stateUpdated));
+                    statement.setInt(2, userId);
+                    statement.setInt(3, applicationId);
+                    statement.executeUpdate();
                 }
             }
         } catch (SQLException e) {
