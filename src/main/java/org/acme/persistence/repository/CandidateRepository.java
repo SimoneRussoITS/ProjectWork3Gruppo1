@@ -69,11 +69,11 @@ public class CandidateRepository {
         }
     }
 
-    public void updateCandidate(int userId, String testState) {
+    public void updateCandidate(int userId, TestState testState) {
         try {
             try (Connection connection = dataSource.getConnection()) {
                 try (PreparedStatement statement = connection.prepareStatement("UPDATE candidate SET state = ? WHERE user_id = ?")) {
-                    statement.setString(1, testState);
+                    statement.setString(1, String.valueOf(testState));
                     statement.setInt(2, userId);
                     statement.executeUpdate();
                 }

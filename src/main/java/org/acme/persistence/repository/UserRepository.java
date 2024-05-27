@@ -174,13 +174,13 @@ public class UserRepository {
         }
     }
 
-    public void updateUser(int userId, String state, int courseId, String role) {
+    public void updateUser(int userId, State state, int courseId, Role role) {
         try {
             try (Connection connection = dataSource.getConnection()) {
                 try (PreparedStatement statement = connection.prepareStatement("UPDATE user SET state = ?, course_selected = ?, role = ? WHERE id = ?")) {
-                    statement.setString(1, state);
+                    statement.setString(1, String.valueOf(state));
                     statement.setInt(2, courseId);
-                    statement.setString(3, role);
+                    statement.setString(3, String.valueOf(role));
                     statement.setInt(4, userId);
                     statement.executeUpdate();
                 }

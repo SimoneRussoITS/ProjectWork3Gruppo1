@@ -1,5 +1,6 @@
 package org.acme.rest;
 
+import jakarta.json.JsonObject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
@@ -28,14 +29,23 @@ public class UserResource {
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public List<CreateUserResponse> getUsers(@CookieParam("SESSION_COOKIE") @DefaultValue("-1") int sessionId) throws WrongCredentialException, SQLException {
+    public CreateUserResponse getUser(@CookieParam("SESSION_COOKIE") @DefaultValue("-1") int sessionId) throws WrongCredentialException, SQLException {
+        CreateUserResponse user = authenticationService.getProfile(sessionId);
+        if (user.getRole() == Role.ADMIN || user.getRole() == Role.STUDENT) {
+            CreateUserResponse u = authenticationService.getProfile(sessionId);
+            return u;
+        } else {
+            throw new WrongCredentialException();
+        }
+    }
+
+    @GET
+    @Path("/all")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<CreateUserResponse> getUsers(@CookieParam("SESSION_COOKIE") @DefaultValue("-1") int sessionId) throws SQLException, WrongCredentialException {
         CreateUserResponse user = authenticationService.getProfile(sessionId);
         if (user.getRole() == Role.ADMIN) {
             return userRepository.getAllUsers();
-        } else if (user.getRole() == Role.STUDENT || user.getRole() == Role.TEACHER) {
-            List<CreateUserResponse> singleUser = new ArrayList<>();
-            singleUser.add(authenticationService.getProfile(sessionId));
-            return singleUser;
         } else {
             throw new WrongCredentialException();
         }
@@ -68,7 +78,12 @@ public class UserResource {
     @PUT
     @Path("/{userId}")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response updateUser(@CookieParam("SESSION_COOKIE") @DefaultValue("-1") int sessionId, @PathParam("userId") int userId, @FormParam("state") String state, @FormParam("courseId") int courseId, @FormParam("role") String role) throws SQLException, WrongCredentialException {
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response updateUser(@CookieParam("SESSION_COOKIE") @DefaultValue("-1") int sessionId, @PathParam("userId") int userId, JsonObject userRequest) throws SQLException, WrongCredentialException {
+        State state = State.valueOf(userRequest.getString("state"));
+        int courseId = userRequest.getInt("courseId");
+        Role role = Role.valueOf(userRequest.getString("role"));
+
         CreateUserResponse userLogged = authenticationService.getProfile(sessionId);
         if (userLogged.getRole() == Role.ADMIN) {
             userRepository.updateUser(userId, state, courseId, role);

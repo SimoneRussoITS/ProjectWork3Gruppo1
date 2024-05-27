@@ -1,5 +1,6 @@
 package org.acme.rest;
 
+import jakarta.json.JsonObject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
@@ -58,7 +59,11 @@ public class CourseResource {
     @PUT
     @Path("/{courseId}")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response updateCourse(@CookieParam("SESSION_COOKIE") @DefaultValue("-1") int sessionId, @PathParam("courseId") int courseId, @FormParam("name") String name, @FormParam("category") String category) throws SQLException, WrongCredentialException {
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response updateCourse(@CookieParam("SESSION_COOKIE") @DefaultValue("-1") int sessionId, @PathParam("courseId") int courseId, JsonObject courseRequest) throws SQLException, WrongCredentialException {
+        String name = courseRequest.getString("name");
+        String category = courseRequest.getString("category");
+
         CreateUserResponse user = authenticationService.getProfile(sessionId);
         if (user.getRole() == Role.ADMIN) {
             courseRepository.updateCourse(courseId, name, category);

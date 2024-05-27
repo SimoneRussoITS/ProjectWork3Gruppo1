@@ -1,5 +1,6 @@
 package org.acme.rest;
 
+import jakarta.json.JsonObject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
@@ -40,9 +41,11 @@ public class ApplicationResource {
 
     @POST
     @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Consumes(MediaType.APPLICATION_JSON)
     public Response createApplication(@CookieParam("SESSION_COOKIE") @DefaultValue("-1") int sessionId,
-                                      @FormParam("courseName") String courseName) throws SQLException, WrongCredentialException {
+                                      JsonObject applicationRequest) throws SQLException, WrongCredentialException {
+        String courseName = applicationRequest.getString("courseName");
+
         Logger log = Logger.getLogger(String.valueOf(AuthenticationResource.class));
         log.info("Received courseName: " + courseName);
 
@@ -71,8 +74,11 @@ public class ApplicationResource {
     @PUT
     @Path("/{userId}/{applicationId}")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response updateApplication(@CookieParam("SESSION_COOKIE") @DefaultValue("-1") int sessionId, @PathParam("userId") int userId, @PathParam("applicationId") int applicationId, @FormParam("state") State stateUpdated) throws SQLException, WrongCredentialException {
-        CreateUserResponse user = authenticationService.getProfile(sessionId);
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response updateApplication(@CookieParam("SESSION_COOKIE") @DefaultValue("-1") int sessionId, @PathParam("userId") int userId, @PathParam("applicationId") int applicationId, JsonObject stateRequest) throws SQLException, WrongCredentialException {
+        State stateUpdated = State.valueOf(stateRequest.getString("state"));
+
+    CreateUserResponse user = authenticationService.getProfile(sessionId);
         if (user.getRole() == Role.ADMIN) {
             applicationRepository.updateApplication(userId, applicationId, stateUpdated);
             return Response.ok().build();
