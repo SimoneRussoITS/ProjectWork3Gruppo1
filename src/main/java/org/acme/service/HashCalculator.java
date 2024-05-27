@@ -1,4 +1,4 @@
-package org.acme.service.exception;
+package org.acme.service;
 
 import io.vertx.ext.auth.impl.hash.SHA512;
 import jakarta.enterprise.context.ApplicationScoped;

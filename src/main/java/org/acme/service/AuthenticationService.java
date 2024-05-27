@@ -7,7 +7,6 @@ import org.acme.persistence.repository.SessionRepository;
 import org.acme.persistence.repository.UserRepository;
 import org.acme.rest.model.CreateUserRequest;
 import org.acme.rest.model.CreateUserResponse;
-import org.acme.service.exception.HashCalculator;
 import org.acme.service.exception.SessionCreatedException;
 import org.acme.service.exception.WrongCredentialException;
 

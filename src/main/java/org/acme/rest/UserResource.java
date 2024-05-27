@@ -9,10 +9,10 @@ import org.acme.persistence.repository.UserRepository;
 import org.acme.rest.model.CreateUserResponse;
 import org.acme.service.AuthenticationService;
 import org.acme.service.UserService;
+import org.acme.service.exception.NotAuthorizedException;
 import org.acme.service.exception.WrongCredentialException;
 
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.List;
 
 @Path("/users")
@@ -42,36 +42,36 @@ public class UserResource {
     @GET
     @Path("/all")
     @Produces(MediaType.APPLICATION_JSON)
-    public List<CreateUserResponse> getUsers(@CookieParam("SESSION_COOKIE") @DefaultValue("-1") int sessionId) throws SQLException, WrongCredentialException {
+    public List<CreateUserResponse> getUsers(@CookieParam("SESSION_COOKIE") @DefaultValue("-1") int sessionId) throws SQLException, NotAuthorizedException {
         CreateUserResponse user = authenticationService.getProfile(sessionId);
         if (user.getRole() == Role.ADMIN) {
             return userRepository.getAllUsers();
         } else {
-            throw new WrongCredentialException();
+            throw new NotAuthorizedException();
         }
     }
 
     @POST
     @Produces(MediaType.APPLICATION_JSON)
-    public Response createUser(@CookieParam("SESSION_COOKIE") @DefaultValue("-1") int sessionId, User user) throws SQLException, WrongCredentialException {
+    public Response createUser(@CookieParam("SESSION_COOKIE") @DefaultValue("-1") int sessionId, User user) throws SQLException, NotAuthorizedException {
         CreateUserResponse userLogged = authenticationService.getProfile(sessionId);
         if (userLogged.getRole() == Role.ADMIN) {
             userRepository.createUser(user);
             return Response.ok().build();
         } else {
-            throw new WrongCredentialException();
+            throw new NotAuthorizedException();
         }
     }
 
     @GET
     @Path("/{userId}")
     @Produces(MediaType.APPLICATION_JSON)
-    public CreateUserResponse getUserById(@CookieParam("SESSION_COOKIE") @DefaultValue("-1") int sessionId, @PathParam("userId") int userId) throws SQLException, WrongCredentialException {
+    public CreateUserResponse getUserById(@CookieParam("SESSION_COOKIE") @DefaultValue("-1") int sessionId, @PathParam("userId") int userId) throws SQLException, NotAuthorizedException {
         CreateUserResponse user = authenticationService.getProfile(sessionId);
         if (user.getRole() == Role.ADMIN) {
             return userService.getUserById(userId);
         } else {
-            throw new WrongCredentialException();
+            throw new NotAuthorizedException();
         }
     }
 
@@ -79,7 +79,7 @@ public class UserResource {
     @Path("/{userId}")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
-    public Response updateUser(@CookieParam("SESSION_COOKIE") @DefaultValue("-1") int sessionId, @PathParam("userId") int userId, JsonObject userRequest) throws SQLException, WrongCredentialException {
+    public Response updateUser(@CookieParam("SESSION_COOKIE") @DefaultValue("-1") int sessionId, @PathParam("userId") int userId, JsonObject userRequest) throws SQLException, NotAuthorizedException {
         State state = State.valueOf(userRequest.getString("state"));
         int courseId = userRequest.getInt("courseId");
         Role role = Role.valueOf(userRequest.getString("role"));
@@ -89,19 +89,19 @@ public class UserResource {
             userRepository.updateUser(userId, state, courseId, role);
             return Response.ok().build();
         } else {
-            throw new WrongCredentialException();
+            throw new NotAuthorizedException();
         }
     }
 
     @DELETE
     @Path("/{userId}")
-    public Response deleteUser(@CookieParam("SESSION_COOKIE") @DefaultValue("-1") int sessionId, @PathParam("userId") int userId) throws SQLException, WrongCredentialException {
+    public Response deleteUser(@CookieParam("SESSION_COOKIE") @DefaultValue("-1") int sessionId, @PathParam("userId") int userId) throws SQLException, NotAuthorizedException {
         CreateUserResponse user = authenticationService.getProfile(sessionId);
         if (user.getRole() == Role.ADMIN) {
             userRepository.deleteUser(userId);
             return Response.ok().build();
         } else {
-            throw new WrongCredentialException();
+            throw new NotAuthorizedException();
         }
     }
 }
