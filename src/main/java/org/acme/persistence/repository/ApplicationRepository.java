@@ -8,6 +8,7 @@ import org.acme.persistence.model.User;
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -84,66 +85,117 @@ public class ApplicationRepository {
             try (PreparedStatement s = connection.prepareStatement("SELECT state FROM candidate WHERE user_id = ?")) {
                 s.setInt(1, userId);
                 var resultSet = s.executeQuery();
-                if ("PASSED".equals(resultSet.getString("state"))) {
-                    // Update user.course_selected based on the application and course tables
-                    try (PreparedStatement statement = connection.prepareStatement("UPDATE user JOIN application ON user.id = application.user_id JOIN course ON application.course_name = course.name SET user.course_selected = course.id WHERE user.id = ? AND application.id = ?")) {
-                        statement.setInt(1, userId);
-                        statement.setInt(2, applicationId);
-                        statement.executeUpdate();
-                    }
-                    // Update the state in the application table
-                    try (PreparedStatement statement = connection.prepareStatement("UPDATE application SET state = ? WHERE user_id = ? AND id = ?")) {
-                        statement.setString(1, String.valueOf(stateUpdated));
-                        statement.setInt(2, userId);
-                        statement.setInt(3, applicationId);
-                        statement.executeUpdate();
-                    }
-                    // If the updated state is "ACCEPTED", block all other applications for the same user
-                    if ("ACTIVE".equals(String.valueOf(stateUpdated))) {
-                        try (PreparedStatement statement = connection.prepareStatement("UPDATE application SET state = 'BLOCKED' WHERE user_id = ? AND id != ?")) {
+                if (resultSet.next()) {  // Sposta il cursore alla prima riga valida
+                    String state = resultSet.getString("state");
+                    if ("PASSED".equals(state)) {
+                        // Aggiorna user.course_selected in base alle tabelle application e course
+                        try (PreparedStatement statement = connection.prepareStatement(
+                                "UPDATE user JOIN application ON user.id = application.user_id " +
+                                        "JOIN course ON application.course_name = course.name " +
+                                        "SET user.course_selected = course.id " +
+                                        "WHERE user.id = ? AND application.id = ?")) {
                             statement.setInt(1, userId);
                             statement.setInt(2, applicationId);
                             statement.executeUpdate();
                         }
-                        // Update the state in the user table
-                        try (PreparedStatement statement = connection.prepareStatement("UPDATE user SET state = ? WHERE id = ?")) {
+
+                        // Aggiorna lo stato nella tabella application
+                        try (PreparedStatement statement = connection.prepareStatement(
+                                "UPDATE application SET state = ? WHERE user_id = ? AND id = ?")) {
                             statement.setString(1, String.valueOf(stateUpdated));
                             statement.setInt(2, userId);
+                            statement.setInt(3, applicationId);
                             statement.executeUpdate();
                         }
+
+                        // Se lo stato aggiornato è "ACTIVE", blocca tutte le altre applicazioni per lo stesso utente
+                        if ("ACTIVE".equals(String.valueOf(stateUpdated))) {
+                            try (PreparedStatement statement = connection.prepareStatement(
+                                    "UPDATE application SET state = 'BLOCKED' WHERE user_id = ? AND id != ?")) {
+                                statement.setInt(1, userId);
+                                statement.setInt(2, applicationId);
+                                statement.executeUpdate();
+                            }
+
+                            // Aggiorna lo stato nella tabella user
+                            try (PreparedStatement statement = connection.prepareStatement(
+                                    "UPDATE user SET state = ? WHERE id = ?")) {
+                                statement.setString(1, String.valueOf(stateUpdated));
+                                statement.setInt(2, userId);
+                                statement.executeUpdate();
+                            }
+                        }
+                    } else if ("FAILED".equals(state)) {
+                        throw new RuntimeException("The candidate has not passed the test");
+                    } else {
+                        throw new RuntimeException("The candidate has not taken the test yet");
                     }
-                } else if ("FAILED".equals(resultSet.getString("state"))) {
-                    throw new RuntimeException("The candidate has not passed the test");
                 } else {
-                    throw new RuntimeException("The candidate has not taken the test yet");
+                    throw new RuntimeException("No candidate found with user_id: " + userId);
                 }
-            }
-        } catch (
-                SQLException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-
-    public void createApplicationAndCandidate(int id, String courseName) {
-        try (Connection connection = dataSource.getConnection()) {
-            try (PreparedStatement statement = connection.prepareStatement(
-                    "INSERT INTO application (user_id, state, course_name) VALUES (?, ?, ?)")) {
-                String state = "PENDING";
-                statement.setInt(1, id);
-                statement.setString(2, state);
-                statement.setString(3, courseName);
-                statement.executeUpdate();
-            }
-            try (PreparedStatement statement = connection.prepareStatement(
-                    "INSERT INTO candidate (user_id, state) VALUES (?, ?)")) {
-                String state = "PENDING";
-                statement.setInt(1, id);
-                statement.setString(2, state);
-                statement.executeUpdate();
             }
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
     }
+
+    public void createApplicationAndCandidate(int id, String courseName) {
+        try (Connection connection = dataSource.getConnection()) {
+            connection.setAutoCommit(false);  // Inizia una transazione
+
+            try {
+                // Controlla se il candidato ha già applicato per lo stesso corso
+                try (PreparedStatement checkApplication = connection.prepareStatement(
+                        "SELECT 1 FROM application WHERE user_id = ? AND course_name = ?")) {
+                    checkApplication.setInt(1, id);
+                    checkApplication.setString(2, courseName);
+                    try (ResultSet resultSet = checkApplication.executeQuery()) {
+                        if (resultSet.next()) {
+                            throw new RuntimeException("The candidate has already applied for this course");
+                        }
+                    }
+                }
+
+                // Inserisce una nuova applicazione
+                try (PreparedStatement insertApplication = connection.prepareStatement(
+                        "INSERT INTO application (user_id, state, course_name) VALUES (?, ?, ?)")) {
+                    String state = "PENDING";
+                    insertApplication.setInt(1, id);
+                    insertApplication.setString(2, state);
+                    insertApplication.setString(3, courseName);
+                    insertApplication.executeUpdate();
+                }
+
+                // Controlla se il candidato esiste nella tabella candidate
+                boolean candidateExists;
+                try (PreparedStatement selectCandidate = connection.prepareStatement(
+                        "SELECT 1 FROM candidate WHERE user_id = ?")) {
+                    selectCandidate.setInt(1, id);
+                    try (ResultSet resultSet = selectCandidate.executeQuery()) {
+                        candidateExists = resultSet.next();
+                    }
+                }
+
+                // Se il candidato non esiste, inserisce un nuovo record nella tabella candidate
+                if (!candidateExists) {
+                    try (PreparedStatement insertCandidate = connection.prepareStatement(
+                            "INSERT INTO candidate (user_id, state) VALUES (?, ?)")) {
+                        String state = "PENDING";
+                        insertCandidate.setInt(1, id);
+                        insertCandidate.setString(2, state);
+                        insertCandidate.executeUpdate();
+                    }
+                }
+
+                connection.commit();  // Conferma la transazione
+            } catch (SQLException e) {
+                connection.rollback();  // Annulla la transazione in caso di errore
+                throw new RuntimeException(e);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+
 }

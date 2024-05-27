@@ -26,8 +26,13 @@ public class CandidateResource {
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public List<Candidate> getTestCandidates() {
-        return candidateRepository.getAllTestCandidates();
+    public List<Candidate> getTestCandidates(@CookieParam("SESSION_COOKIE") @DefaultValue("-1") int sessionId) throws WrongCredentialException, SQLException {
+        CreateUserResponse user = authenticationService.getProfile(sessionId);
+        if (user.getRole() == Role.ADMIN) {
+            return candidateRepository.getAllTestCandidates();
+        } else {
+            throw new WrongCredentialException();
+        }
     }
 
     @GET
