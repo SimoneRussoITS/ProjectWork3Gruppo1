@@ -25,14 +25,7 @@ public class CourseRepository {
         try {
             try (Connection connection = dataSource.getConnection()) {
                 try (PreparedStatement statement = connection.prepareStatement("SELECT id, name, category FROM course")) {
-                    var resultSet = statement.executeQuery();
-                    while (resultSet.next()) {
-                        var course = new Course();
-                        course.setIdCourse(resultSet.getInt("id"));
-                        course.setName(resultSet.getString("name"));
-                        course.setCategory(Category.valueOf(resultSet.getString("category")));
-                        courses.add(course);
-                    }
+                    newCourse(courses, statement);
                 }
             }
         } catch (SQLException e) {
@@ -67,20 +60,24 @@ public class CourseRepository {
             try (Connection connection = dataSource.getConnection()) {
                 try (PreparedStatement statement = connection.prepareStatement("SELECT id, name, category FROM course WHERE category = ?")) {
                     statement.setString(1, category);
-                    var resultSet = statement.executeQuery();
-                    while (resultSet.next()) {
-                        var course = new Course();
-                        course.setIdCourse(resultSet.getInt("id"));
-                        course.setName(resultSet.getString("name"));
-                        course.setCategory(Category.valueOf(resultSet.getString("category")));
-                        courses.add(course);
-                    }
+                    newCourse(courses, statement);
                 }
             }
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
         return courses;
+    }
+
+    private void newCourse(List<Course> courses, PreparedStatement statement) throws SQLException {
+        var resultSet = statement.executeQuery();
+        while (resultSet.next()) {
+            var course = new Course();
+            course.setIdCourse(resultSet.getInt("id"));
+            course.setName(resultSet.getString("name"));
+            course.setCategory(Category.valueOf(resultSet.getString("category")));
+            courses.add(course);
+        }
     }
 
     public void deleteCourse(int courseId) {

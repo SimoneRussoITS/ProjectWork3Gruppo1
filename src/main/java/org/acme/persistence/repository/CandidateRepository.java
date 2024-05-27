@@ -26,20 +26,7 @@ public class CandidateRepository {
         try {
             try (Connection connection = dataSource.getConnection()) {
                 try (PreparedStatement statement = connection.prepareStatement("SELECT c.id, c.user_id, c.state, u.name, u.surname, u.email FROM candidate AS c JOIN user AS u ON c.user_id = u.ID")) {
-                    var resultSet = statement.executeQuery();
-                    while (resultSet.next()) {
-                        var candidate = new Candidate();
-                        candidate.setCandidateId(resultSet.getInt("id"));
-                        candidate.setIdUser(resultSet.getInt("user_id"));
-                        candidate.setTestState(TestState.valueOf(resultSet.getString("state")));
-                        var user = new User();
-                        user.setId(resultSet.getInt("user_id"));
-                        user.setName(resultSet.getString("name"));
-                        user.setSurname(resultSet.getString("surname"));
-                        user.setEmail(resultSet.getString("email"));
-                        candidate.setUser(user);
-                        candidates.add(candidate);
-                    }
+                    newCandidate(candidates, statement);
                 }
             }
         } catch (SQLException e) {
@@ -50,29 +37,36 @@ public class CandidateRepository {
 
     public List<Candidate> getCandidateByUserId(int userId) {
         List<Candidate> candidates = new ArrayList<>();
-        try {
-            try (Connection connection = dataSource.getConnection()) {
-                try (PreparedStatement statement = connection.prepareStatement("SELECT c.id, c.user_id, c.state, u.name, u.surname, u.email FROM candidate AS c JOIN user AS u ON c.user_id = u.ID WHERE user_id = ?")) {
-                    var resultSet = statement.executeQuery();
-                    while (resultSet.next()) {
-                        var candidate = new Candidate();
-                        candidate.setCandidateId(resultSet.getInt("id"));
-                        candidate.setIdUser(resultSet.getInt("user_id"));
-                        candidate.setTestState(TestState.valueOf(resultSet.getString("state")));
-                        var user = new User();
-                        user.setId(resultSet.getInt("user_id"));
-                        user.setName(resultSet.getString("name"));
-                        user.setSurname(resultSet.getString("surname"));
-                        user.setEmail(resultSet.getString("email"));
-                        candidate.setUser(user);
-                        candidates.add(candidate);
-                    }
-                }
+        try (Connection connection = dataSource.getConnection()) {
+            String sql = "SELECT c.id, c.user_id, c.state, u.name, u.surname, u.email " +
+                    "FROM candidate AS c " +
+                    "JOIN user AS u ON c.user_id = u.id " +
+                    "WHERE c.user_id = ?";
+            try (PreparedStatement statement = connection.prepareStatement(sql)) {
+                statement.setInt(1, userId);  // Usa userId per impostare il parametro della query
+                newCandidate(candidates, statement);
             }
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
         return candidates;
+    }
+
+    private void newCandidate(List<Candidate> candidates, PreparedStatement statement) throws SQLException {
+        var resultSet = statement.executeQuery();
+        while (resultSet.next()) {
+            var candidate = new Candidate();
+            candidate.setCandidateId(resultSet.getInt("id"));
+            candidate.setIdUser(resultSet.getInt("user_id"));
+            candidate.setTestState(TestState.valueOf(resultSet.getString("state")));
+            var user = new User();
+            user.setId(resultSet.getInt("user_id"));
+            user.setName(resultSet.getString("name"));
+            user.setSurname(resultSet.getString("surname"));
+            user.setEmail(resultSet.getString("email"));
+            candidate.setUser(user);
+            candidates.add(candidate);
+        }
     }
 
     public void updateCandidate(int userId, String testState) {

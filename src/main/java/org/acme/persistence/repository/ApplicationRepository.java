@@ -26,22 +26,7 @@ public class ApplicationRepository {
         try {
             try (Connection connection = dataSource.getConnection()) {
                 try (PreparedStatement statement = connection.prepareStatement("SELECT a.id, a.user_id, a.created_at, a.state, a.course_name, u.name, u.surname, u.email FROM application AS a JOIN user AS u ON a.user_id = u.ID")) {
-                    var resultSet = statement.executeQuery();
-                    while (resultSet.next()) {
-                        var application = new Application();
-                        application.setId(resultSet.getInt("id"));
-                        application.setIdUser(resultSet.getInt("user_id"));
-                        application.setCreatedAt(resultSet.getTimestamp("created_at"));
-                        application.setState(State.valueOf(resultSet.getString("state")));
-                        application.setCourseName(resultSet.getString("course_name"));
-                        var user = new User();
-                        user.setId(resultSet.getInt("user_id"));
-                        user.setName(resultSet.getString("name"));
-                        user.setSurname(resultSet.getString("surname"));
-                        user.setEmail(resultSet.getString("email"));
-                        application.setUser(user);
-                        applications.add(application);
-                    }
+                    newApplication(applications, statement);
                 }
             }
         } catch (SQLException e) {
@@ -56,22 +41,7 @@ public class ApplicationRepository {
             try (Connection connection = dataSource.getConnection()) {
                 try (PreparedStatement statement = connection.prepareStatement("SELECT a.id, a.user_id, a.created_at, a.state, a.course_name, u.name, u.surname, u.email FROM application AS a JOIN user AS u ON a.user_id = u.ID WHERE user_id = ?")) {
                     statement.setInt(1, userId);
-                    var resultSet = statement.executeQuery();
-                    while (resultSet.next()) {
-                        var application = new Application();
-                        application.setId(resultSet.getInt("id"));
-                        application.setIdUser(resultSet.getInt("user_id"));
-                        application.setCreatedAt(resultSet.getTimestamp("created_at"));
-                        application.setState(State.valueOf(resultSet.getString("state")));
-                        application.setCourseName(resultSet.getString("course_name"));
-                        var user = new User();
-                        user.setId(resultSet.getInt("user_id"));
-                        user.setName(resultSet.getString("name"));
-                        user.setSurname(resultSet.getString("surname"));
-                        user.setEmail(resultSet.getString("email"));
-                        application.setUser(user);
-                        applications.add(application);
-                    }
+                    newApplication(applications, statement);
                 }
             }
         } catch (SQLException e) {
@@ -80,62 +50,22 @@ public class ApplicationRepository {
         return applications;
     }
 
-    public void updateApplication(int userId, int applicationId, State stateUpdated) {
-        try (Connection connection = dataSource.getConnection()) {
-            try (PreparedStatement s = connection.prepareStatement("SELECT state FROM candidate WHERE user_id = ?")) {
-                s.setInt(1, userId);
-                var resultSet = s.executeQuery();
-                if (resultSet.next()) {  // Sposta il cursore alla prima riga valida
-                    String state = resultSet.getString("state");
-                    if ("PASSED".equals(state)) {
-                        // Aggiorna user.course_selected in base alle tabelle application e course
-                        try (PreparedStatement statement = connection.prepareStatement(
-                                "UPDATE user JOIN application ON user.id = application.user_id " +
-                                        "JOIN course ON application.course_name = course.name " +
-                                        "SET user.course_selected = course.id " +
-                                        "WHERE user.id = ? AND application.id = ?")) {
-                            statement.setInt(1, userId);
-                            statement.setInt(2, applicationId);
-                            statement.executeUpdate();
-                        }
-
-                        // Aggiorna lo stato nella tabella application
-                        try (PreparedStatement statement = connection.prepareStatement(
-                                "UPDATE application SET state = ? WHERE user_id = ? AND id = ?")) {
-                            statement.setString(1, String.valueOf(stateUpdated));
-                            statement.setInt(2, userId);
-                            statement.setInt(3, applicationId);
-                            statement.executeUpdate();
-                        }
-
-                        // Se lo stato aggiornato è "ACTIVE", blocca tutte le altre applicazioni per lo stesso utente
-                        if ("ACTIVE".equals(String.valueOf(stateUpdated))) {
-                            try (PreparedStatement statement = connection.prepareStatement(
-                                    "UPDATE application SET state = 'BLOCKED' WHERE user_id = ? AND id != ?")) {
-                                statement.setInt(1, userId);
-                                statement.setInt(2, applicationId);
-                                statement.executeUpdate();
-                            }
-
-                            // Aggiorna lo stato nella tabella user
-                            try (PreparedStatement statement = connection.prepareStatement(
-                                    "UPDATE user SET state = ? WHERE id = ?")) {
-                                statement.setString(1, String.valueOf(stateUpdated));
-                                statement.setInt(2, userId);
-                                statement.executeUpdate();
-                            }
-                        }
-                    } else if ("FAILED".equals(state)) {
-                        throw new RuntimeException("The candidate has not passed the test");
-                    } else {
-                        throw new RuntimeException("The candidate has not taken the test yet");
-                    }
-                } else {
-                    throw new RuntimeException("No candidate found with user_id: " + userId);
-                }
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
+    private void newApplication(List<Application> applications, PreparedStatement statement) throws SQLException {
+        var resultSet = statement.executeQuery();
+        while (resultSet.next()) {
+            var application = new Application();
+            application.setId(resultSet.getInt("id"));
+            application.setIdUser(resultSet.getInt("user_id"));
+            application.setCreatedAt(resultSet.getTimestamp("created_at"));
+            application.setState(State.valueOf(resultSet.getString("state")));
+            application.setCourseName(resultSet.getString("course_name"));
+            var user = new User();
+            user.setId(resultSet.getInt("user_id"));
+            user.setName(resultSet.getString("name"));
+            user.setSurname(resultSet.getString("surname"));
+            user.setEmail(resultSet.getString("email"));
+            application.setUser(user);
+            applications.add(application);
         }
     }
 
@@ -197,5 +127,62 @@ public class ApplicationRepository {
         }
     }
 
+    public void updateApplication(int userId, int applicationId, State stateUpdated) {
+        try (Connection connection = dataSource.getConnection()) {
+            try (PreparedStatement s = connection.prepareStatement("SELECT state FROM candidate WHERE user_id = ?")) {
+                s.setInt(1, userId);
+                var resultSet = s.executeQuery();
+                if (resultSet.next()) {  // Sposta il cursore alla prima riga valida
+                    String state = resultSet.getString("state");
+                    if ("PASSED".equals(state)) {
+                        // Aggiorna user.course_selected in base alle tabelle application e course
+                        try (PreparedStatement statement = connection.prepareStatement(
+                                "UPDATE user JOIN application ON user.id = application.user_id " +
+                                        "JOIN course ON application.course_name = course.name " +
+                                        "SET user.course_selected = course.id " +
+                                        "WHERE user.id = ? AND application.id = ?")) {
+                            statement.setInt(1, userId);
+                            statement.setInt(2, applicationId);
+                            statement.executeUpdate();
+                        }
 
+                        // Aggiorna lo stato nella tabella application
+                        try (PreparedStatement statement = connection.prepareStatement(
+                                "UPDATE application SET state = ? WHERE user_id = ? AND id = ?")) {
+                            statement.setString(1, String.valueOf(stateUpdated));
+                            statement.setInt(2, userId);
+                            statement.setInt(3, applicationId);
+                            statement.executeUpdate();
+                        }
+
+                        // Se lo stato aggiornato è "ACTIVE", blocca tutte le altre applicazioni per lo stesso utente
+                        if ("ACTIVE".equals(String.valueOf(stateUpdated))) {
+                            try (PreparedStatement statement = connection.prepareStatement(
+                                    "UPDATE application SET state = 'BLOCKED' WHERE user_id = ? AND id != ?")) {
+                                statement.setInt(1, userId);
+                                statement.setInt(2, applicationId);
+                                statement.executeUpdate();
+                            }
+
+                            // Aggiorna lo stato nella tabella user
+                            try (PreparedStatement statement = connection.prepareStatement(
+                                    "UPDATE user SET state = ? WHERE id = ?")) {
+                                statement.setString(1, String.valueOf(stateUpdated));
+                                statement.setInt(2, userId);
+                                statement.executeUpdate();
+                            }
+                        }
+                    } else if ("FAILED".equals(state)) {
+                        throw new RuntimeException("The candidate has not passed the test");
+                    } else {
+                        throw new RuntimeException("The candidate has not taken the test yet");
+                    }
+                } else {
+                    throw new RuntimeException("No candidate found with user_id: " + userId);
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }
