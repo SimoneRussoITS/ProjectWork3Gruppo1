@@ -1,6 +1,5 @@
 package org.acme.rest;
 
-import jakarta.json.JsonObject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
@@ -9,6 +8,7 @@ import org.acme.persistence.model.Role;
 import org.acme.persistence.model.TestState;
 import org.acme.persistence.repository.CandidateRepository;
 import org.acme.rest.model.CreateUserResponse;
+import org.acme.rest.model.TestStateRequest;
 import org.acme.service.AuthenticationService;
 import org.acme.service.exception.WrongCredentialException;
 
@@ -53,8 +53,8 @@ public class CandidateResource {
     @Path("/{userId}")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
-    public Response updateCandidate(@CookieParam("SESSION_COOKIE") @DefaultValue("-1") int sessionId, @PathParam("userId") int userId, JsonObject testStateRequest) throws SQLException, WrongCredentialException {
-        TestState testState = TestState.valueOf(testStateRequest.getString("testState"));
+    public Response updateCandidate(@CookieParam("SESSION_COOKIE") @DefaultValue("-1") int sessionId, @PathParam("userId") int userId, TestStateRequest testStateRequest) throws SQLException, WrongCredentialException {
+        TestState testState = testStateRequest.getTestState("testState");
 
         CreateUserResponse user = authenticationService.getProfile(sessionId);
         if (user.getRole() == Role.ADMIN) {

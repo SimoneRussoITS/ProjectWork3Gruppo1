@@ -1,12 +1,13 @@
 package org.acme.rest;
 
-import jakarta.json.JsonObject;
+
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.NewCookie;
 import jakarta.ws.rs.core.Response;
 import org.acme.rest.model.CreateUserRequest;
 import org.acme.rest.model.CreateUserResponse;
+import org.acme.rest.model.LoginRequest;
 import org.acme.service.AuthenticationService;
 import org.acme.service.exception.SessionCreatedException;
 import org.acme.service.exception.WrongCredentialException;
@@ -29,9 +30,9 @@ public class AuthenticationResource {
     @POST
     @Path("/login")
     @Consumes(MediaType.APPLICATION_JSON)
-    public Response login(JsonObject loginRequest) throws WrongCredentialException, SessionCreatedException {
-        String email = loginRequest.getString("email");
-        String password = loginRequest.getString("password");
+    public Response login(LoginRequest loginRequest) throws WrongCredentialException, SessionCreatedException {
+        String email = loginRequest.getEmail("email");
+        String password = loginRequest.getPassword("password");
 
         int session = authenticationService.login(email, password);
         NewCookie sessionCookie = new NewCookie.Builder("SESSION_COOKIE").path("/").value(String.valueOf(session)).build();

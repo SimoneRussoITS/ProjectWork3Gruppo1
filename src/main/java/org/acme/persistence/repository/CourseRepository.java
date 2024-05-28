@@ -7,6 +7,7 @@ import org.acme.persistence.model.Course;
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -97,18 +98,25 @@ public class CourseRepository {
     }
 
     public void createCourse(Course course) {
-        try {
-            try (Connection connection = dataSource.getConnection()) {
-                try (PreparedStatement statement = connection.prepareStatement("INSERT INTO course (name, category) VALUES (?, ?)")) {
-                    statement.setString(1, course.getName());
-                    statement.setString(2, course.getCategory().name());
-                    statement.executeUpdate();
+        try (Connection connection = dataSource.getConnection()) {
+            try (PreparedStatement checkStatement = connection.prepareStatement("SELECT COUNT(*) FROM course WHERE name = ?")) {
+                checkStatement.setString(1, course.getName());
+                ResultSet resultSet = checkStatement.executeQuery();
+                if (resultSet.next() && resultSet.getInt(1) > 0) {
+                    throw new RuntimeException("A course with the same name already exists.");
                 }
+            }
+
+            try (PreparedStatement insertStatement = connection.prepareStatement("INSERT INTO course (name, category) VALUES (?, ?)")) {
+                insertStatement.setString(1, course.getName());
+                insertStatement.setString(2, course.getCategory().name());
+                insertStatement.executeUpdate();
             }
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
     }
+
 
     public void updateCourse(int courseId, String name, String category) {
         try {

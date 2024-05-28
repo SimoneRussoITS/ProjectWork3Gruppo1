@@ -1,12 +1,12 @@
 package org.acme.rest;
 
-import jakarta.json.JsonObject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.acme.persistence.model.*;
 import org.acme.persistence.repository.UserRepository;
 import org.acme.rest.model.CreateUserResponse;
+import org.acme.rest.model.UserRequest;
 import org.acme.service.AuthenticationService;
 import org.acme.service.UserService;
 import org.acme.service.exception.NotAuthorizedException;
@@ -79,10 +79,10 @@ public class UserResource {
     @Path("/{userId}")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
-    public Response updateUser(@CookieParam("SESSION_COOKIE") @DefaultValue("-1") int sessionId, @PathParam("userId") int userId, JsonObject userRequest) throws SQLException, NotAuthorizedException {
-        State state = State.valueOf(userRequest.getString("state"));
-        int courseId = userRequest.getInt("courseId");
-        Role role = Role.valueOf(userRequest.getString("role"));
+    public Response updateUser(@CookieParam("SESSION_COOKIE") @DefaultValue("-1") int sessionId, @PathParam("userId") int userId, UserRequest userRequest) throws SQLException, NotAuthorizedException {
+        State state = userRequest.getState("state");
+        int courseId = userRequest.getCourseId("courseId");
+        Role role = userRequest.getRole("role");
 
         CreateUserResponse userLogged = authenticationService.getProfile(sessionId);
         if (userLogged.getRole() == Role.ADMIN) {

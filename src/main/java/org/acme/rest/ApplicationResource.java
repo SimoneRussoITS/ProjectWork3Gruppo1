@@ -1,6 +1,5 @@
 package org.acme.rest;
 
-import jakarta.json.JsonObject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
@@ -8,7 +7,9 @@ import org.acme.persistence.model.Application;
 import org.acme.persistence.model.Role;
 import org.acme.persistence.model.State;
 import org.acme.persistence.repository.ApplicationRepository;
+import org.acme.rest.model.ApplicationRequest;
 import org.acme.rest.model.CreateUserResponse;
+import org.acme.rest.model.StateRequest;
 import org.acme.service.AuthenticationService;
 import org.acme.service.exception.WrongCredentialException;
 
@@ -43,8 +44,8 @@ public class ApplicationResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
     public Response createApplication(@CookieParam("SESSION_COOKIE") @DefaultValue("-1") int sessionId,
-                                      JsonObject applicationRequest) throws SQLException, WrongCredentialException {
-        String courseName = applicationRequest.getString("courseName");
+                                      ApplicationRequest applicationRequest) throws SQLException, WrongCredentialException {
+        String courseName = applicationRequest.getCourseName("courseName");
 
         Logger log = Logger.getLogger(String.valueOf(AuthenticationResource.class));
         log.info("Received courseName: " + courseName);
@@ -75,8 +76,8 @@ public class ApplicationResource {
     @Path("/{userId}/{applicationId}")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
-    public Response updateApplication(@CookieParam("SESSION_COOKIE") @DefaultValue("-1") int sessionId, @PathParam("userId") int userId, @PathParam("applicationId") int applicationId, JsonObject stateRequest) throws SQLException, WrongCredentialException {
-        State stateUpdated = State.valueOf(stateRequest.getString("state"));
+    public Response updateApplication(@CookieParam("SESSION_COOKIE") @DefaultValue("-1") int sessionId, @PathParam("userId") int userId, @PathParam("applicationId") int applicationId, StateRequest stateRequest) throws SQLException, WrongCredentialException {
+        State stateUpdated = stateRequest.getState("state");
 
     CreateUserResponse user = authenticationService.getProfile(sessionId);
         if (user.getRole() == Role.ADMIN) {

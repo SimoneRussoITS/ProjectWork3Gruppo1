@@ -1,12 +1,12 @@
 package org.acme.rest;
 
-import jakarta.json.JsonObject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.acme.persistence.model.Course;
 import org.acme.persistence.model.Role;
 import org.acme.persistence.repository.CourseRepository;
+import org.acme.rest.model.CourseRequest;
 import org.acme.rest.model.CreateUserResponse;
 import org.acme.service.AuthenticationService;
 import org.acme.service.exception.WrongCredentialException;
@@ -60,9 +60,9 @@ public class CourseResource {
     @Path("/{courseId}")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
-    public Response updateCourse(@CookieParam("SESSION_COOKIE") @DefaultValue("-1") int sessionId, @PathParam("courseId") int courseId, JsonObject courseRequest) throws SQLException, WrongCredentialException {
-        String name = courseRequest.getString("name");
-        String category = courseRequest.getString("category");
+    public Response updateCourse(@CookieParam("SESSION_COOKIE") @DefaultValue("-1") int sessionId, @PathParam("courseId") int courseId, CourseRequest courseRequest) throws SQLException, WrongCredentialException {
+        String name = courseRequest.getName("name");
+        String category = courseRequest.getCategory("category");
 
         CreateUserResponse user = authenticationService.getProfile(sessionId);
         if (user.getRole() == Role.ADMIN) {
