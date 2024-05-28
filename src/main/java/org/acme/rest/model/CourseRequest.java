@@ -4,7 +4,7 @@ public class CourseRequest {
     private String name;
     private String category;
 
-    public String getName(String name) {
+    public String getName() {
         return name;
     }
 
@@ -12,7 +12,7 @@ public class CourseRequest {
         this.name = name;
     }
 
-    public String getCategory(String category) {
+    public String getCategory() {
         return category;
     }
 

@@ -31,8 +31,8 @@ public class AuthenticationResource {
     @Path("/login")
     @Consumes(MediaType.APPLICATION_JSON)
     public Response login(LoginRequest loginRequest) throws WrongCredentialException, SessionCreatedException {
-        String email = loginRequest.getEmail("email");
-        String password = loginRequest.getPassword("password");
+        String email = loginRequest.getEmail();
+        String password = loginRequest.getPassword();
 
         int session = authenticationService.login(email, password);
         NewCookie sessionCookie = new NewCookie.Builder("SESSION_COOKIE").path("/").value(String.valueOf(session)).build();

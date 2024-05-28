@@ -4,7 +4,7 @@ public class LoginRequest {
     private String email;
     private String password;
 
-    public String getEmail(String email) {
+    public String getEmail() {
         return email;
     }
 
@@ -12,7 +12,7 @@ public class LoginRequest {
         this.email = email;
     }
 
-    public String getPassword(String password) {
+    public String getPassword() {
         return password;
     }
 
@@ -20,3 +20,4 @@ public class LoginRequest {
         this.password = password;
     }
 }
+

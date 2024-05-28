@@ -8,8 +8,8 @@ import java.lang.annotation.Target;
 public class TestStateRequest {
     private TestState testState;
 
-    public TestState getTestState(String testState) {
-        return TestState.valueOf(testState);
+    public TestState getTestState() {
+        return testState;
     }
 
     public void setTestState(TestState testState) {

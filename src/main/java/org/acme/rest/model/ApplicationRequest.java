@@ -3,7 +3,7 @@ package org.acme.rest.model;
 public class ApplicationRequest {
     private String courseName;
 
-    public String getCourseName(String courseName) {
+    public String getCourseName() {
         return this.courseName;
     }
 

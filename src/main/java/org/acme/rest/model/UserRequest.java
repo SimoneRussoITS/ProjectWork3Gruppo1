@@ -8,24 +8,24 @@ public class UserRequest {
     private int courseId;
     private Role role;
 
-    public State getState(String state) {
-        return State.valueOf(state);
+    public State getState() {
+        return state;
     }
 
     public void setState(State state) {
         this.state = state;
     }
 
-    public int getCourseId(String courseId) {
-        return Integer.valueOf(courseId);
+    public int getCourseId() {
+        return courseId;
     }
 
     public void setCourseId(int courseId) {
         this.courseId = courseId;
     }
 
-    public Role getRole(String role) {
-        return Role.valueOf(role);
+    public Role getRole() {
+        return role;
     }
 
     public void setRole(Role role) {

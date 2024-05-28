@@ -45,7 +45,7 @@ public class ApplicationResource {
     @Consumes(MediaType.APPLICATION_JSON)
     public Response createApplication(@CookieParam("SESSION_COOKIE") @DefaultValue("-1") int sessionId,
                                       ApplicationRequest applicationRequest) throws SQLException, WrongCredentialException {
-        String courseName = applicationRequest.getCourseName("courseName");
+        String courseName = applicationRequest.getCourseName();
 
         Logger log = Logger.getLogger(String.valueOf(AuthenticationResource.class));
         log.info("Received courseName: " + courseName);
@@ -77,7 +77,7 @@ public class ApplicationResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
     public Response updateApplication(@CookieParam("SESSION_COOKIE") @DefaultValue("-1") int sessionId, @PathParam("userId") int userId, @PathParam("applicationId") int applicationId, StateRequest stateRequest) throws SQLException, WrongCredentialException {
-        State stateUpdated = stateRequest.getState("state");
+        State stateUpdated = stateRequest.getState();
 
     CreateUserResponse user = authenticationService.getProfile(sessionId);
         if (user.getRole() == Role.ADMIN) {

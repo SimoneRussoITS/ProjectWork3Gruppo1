@@ -61,8 +61,8 @@ public class CourseResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
     public Response updateCourse(@CookieParam("SESSION_COOKIE") @DefaultValue("-1") int sessionId, @PathParam("courseId") int courseId, CourseRequest courseRequest) throws SQLException, WrongCredentialException {
-        String name = courseRequest.getName("name");
-        String category = courseRequest.getCategory("category");
+        String name = courseRequest.getName();
+        String category = courseRequest.getCategory();
 
         CreateUserResponse user = authenticationService.getProfile(sessionId);
         if (user.getRole() == Role.ADMIN) {

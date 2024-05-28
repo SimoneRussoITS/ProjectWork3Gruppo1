@@ -80,9 +80,9 @@ public class UserResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
     public Response updateUser(@CookieParam("SESSION_COOKIE") @DefaultValue("-1") int sessionId, @PathParam("userId") int userId, UserRequest userRequest) throws SQLException, NotAuthorizedException {
-        State state = userRequest.getState("state");
-        int courseId = userRequest.getCourseId("courseId");
-        Role role = userRequest.getRole("role");
+        State state = userRequest.getState();
+        int courseId = userRequest.getCourseId();
+        Role role = userRequest.getRole();
 
         CreateUserResponse userLogged = authenticationService.getProfile(sessionId);
         if (userLogged.getRole() == Role.ADMIN) {

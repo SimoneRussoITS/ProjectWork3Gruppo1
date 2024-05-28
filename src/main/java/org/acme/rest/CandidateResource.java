@@ -54,7 +54,7 @@ public class CandidateResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
     public Response updateCandidate(@CookieParam("SESSION_COOKIE") @DefaultValue("-1") int sessionId, @PathParam("userId") int userId, TestStateRequest testStateRequest) throws SQLException, WrongCredentialException {
-        TestState testState = testStateRequest.getTestState("testState");
+        TestState testState = testStateRequest.getTestState();
 
         CreateUserResponse user = authenticationService.getProfile(sessionId);
         if (user.getRole() == Role.ADMIN) {
