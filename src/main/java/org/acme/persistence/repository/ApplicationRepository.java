@@ -132,7 +132,7 @@ public class ApplicationRepository {
             try (PreparedStatement s = connection.prepareStatement("SELECT state FROM candidate WHERE user_id = ?")) {
                 s.setInt(1, userId);
                 var resultSet = s.executeQuery();
-                if (resultSet.next()) {  // Sposta il cursore alla prima riga valida
+                if (resultSet.next()) {
                     String state = resultSet.getString("state");
                     if ("PASSED".equals(state)) {
                         // Aggiorna user.course_selected in base alle tabelle application e course
@@ -145,7 +145,6 @@ public class ApplicationRepository {
                             statement.setInt(2, applicationId);
                             statement.executeUpdate();
                         }
-
                         // Aggiorna lo stato nella tabella application
                         try (PreparedStatement statement = connection.prepareStatement(
                                 "UPDATE application SET state = ? WHERE user_id = ? AND id = ?")) {
@@ -154,7 +153,6 @@ public class ApplicationRepository {
                             statement.setInt(3, applicationId);
                             statement.executeUpdate();
                         }
-
                         // Se lo stato aggiornato è "ACTIVE", blocca tutte le altre applicazioni per lo stesso utente
                         if ("ACTIVE".equals(String.valueOf(stateUpdated))) {
                             try (PreparedStatement statement = connection.prepareStatement(

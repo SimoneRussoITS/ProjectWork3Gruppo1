@@ -164,7 +164,18 @@ public class UserRepository {
     public void deleteUser(int userId) {
         try {
             try (Connection connection = dataSource.getConnection()) {
-                try (PreparedStatement statement = connection.prepareStatement("DELETE FROM user WHERE id = ?")) {
+                // Elimina prima da user.candidate
+                try (PreparedStatement statement = connection.prepareStatement("DELETE FROM user.candidate WHERE user_id = ?")) {
+                    statement.setInt(1, userId);
+                    statement.executeUpdate();
+                }
+                // Poi elimina da user.application
+                try (PreparedStatement statement = connection.prepareStatement("DELETE FROM user.application WHERE user_id = ?")) {
+                    statement.setInt(1, userId);
+                    statement.executeUpdate();
+                }
+                // Infine, elimina da user.user
+                try (PreparedStatement statement = connection.prepareStatement("DELETE FROM user.user WHERE id = ?")) {
                     statement.setInt(1, userId);
                     statement.executeUpdate();
                 }
